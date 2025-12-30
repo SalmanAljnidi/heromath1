@@ -1,0 +1,58 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#071024"/><link rel="manifest" href="manifest.json"/><link rel="icon" href="assets/icons/app-192.png"/>
+<title>Hero Math</title><link rel="stylesheet" href="styles.css"/></head><body>
+<div class="wrap">
+  <div class="header"><div class="brand"><img src="assets/icons/app-192.png" alt="Hero Math"/><h1>Hero Math</h1></div></div>
+  <div class="main">
+    <div>
+      <div class="panel canvasWrap">
+        <canvas id="game" width="960" height="540"></canvas>
+        <div class="overlay" id="quizOverlay" aria-live="polite">
+          <div class="modal">
+            <div class="modalHeader"><span class="pill" id="quizType">سؤال</span><span class="timer" id="quizTimer">٢٠</span></div>
+            <div class="qText" id="quizText">...</div>
+              <div class="viz" id="quizViz" aria-hidden="false"></div><div class="choices" id="quizChoices"></div>
+            <div class="hint">اختر الإجابة الصحيحة خلال ٢٠ ثانية لتكمل اللعب ✅</div>
+          </div>
+        </div>
+      </div>
+      
+        <div class="overlay" id="nameOverlay" aria-live="polite">
+          <div class="modal">
+            <div class="modalHeader">
+              <span class="pill">الاسم</span>
+              <span class="timer">Hero Math</span>
+            </div>
+            <div class="qText">اكتب اسم اللاعب</div>
+            <div style="display:grid;gap:10px">
+              <input id="nameInput" class="nameInput" type="text" maxlength="18" placeholder="اسم اللاعب"/>
+              <button class="btn primary" id="btnSaveName" type="button">حفظ</button>
+            </div>
+            <div class="hint">يمكنك تغيير الاسم لاحقًا من لوحة التحكم ✅</div>
+          </div>
+        </div>
+
+<div class="mobileControls"><button class="jumpBtn" id="btnJump">قفز</button><div class="joy" id="joy"><div class="knob" id="knob"></div></div></div>
+    </div>
+    <div class="side"><div class="panel">
+      <h2>لوحة التحكم</h2>
+      <div class="kv"><span>المرحلة</span><b id="uiLevel">١</b></div>
+      <div class="kv"><span>النتيجة</span><b id="uiScore">٠</b></div>
+          <div class="kv"><span>اللاعب</span><b id="uiPlayer">—</b></div>
+          <button class="btn" id="btnChangeName" style="margin-top:10px;width:100%">تغيير الاسم</button>
+      <div class="kv"><span>إجابات صحيحة</span><b id="uiCorrect">٠</b></div>
+      <div class="kv"><span>إجابات خاطئة</span><b id="uiWrong">٠</b></div>
+      <div class="controls"><button class="btn primary" id="btnStart">ابدأ</button><button class="btn" id="btnRestart">إعادة</button></div>
+      <p class="small" style="margin:12px 0 0;color:var(--muted);line-height:1.7">التحكّم: <b>⟵ ⟶</b> للحركة، <b>مسافة</b> للقفز. على الجوال: عصا يمين + زر قفز يسار.</p>
+    </div></div>
+  </div>
+  <div class="footer"><div>© جميع الحقوق محفوظة لـ <b>سلمان الجنيدي</b></div>
+    <div class="links">
+      <a class="iconBtn" href="https://snapchat.com/t/dE9xDbXy" target="_blank" rel="noopener"><img src="assets/icons/snap.svg" alt="Snapchat"/> سناب</a>
+      <a class="iconBtn" href="https://wa.me/966566996166" target="_blank" rel="noopener"><img src="assets/icons/whatsapp.svg" alt="WhatsApp"/> واتساب</a>
+    </div>
+  </div>
+</div>
+<script type="module" src="js/main.js"></script>
+</body></html>
