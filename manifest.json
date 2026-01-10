@@ -1,6 +1,6 @@
 {
-  "name": "Hero Math",
-  "short_name": "HeroMath",
+  "name": "طريق المغامرة",
+  "short_name": "طريق المغامرة",
   "start_url": "./index.html?v=addsub2",
   "display": "standalone",
   "background_color": "#071024",
