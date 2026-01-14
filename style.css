@@ -1,129 +1,79 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 body {
-    margin: 0;
-    background-color: #202020;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-family: 'Press Start 2P', cursive, sans-serif; /* خط العاب قديم */
-    overflow: hidden;
+    margin: 0; background: #101010;
+    height: 100vh; display: flex; justify-content: center; align-items: center;
+    font-family: 'Press Start 2P', cursive; overflow: hidden;
 }
 
-#game-container {
+#game-wrap {
     position: relative;
-    width: 100%;
-    max-width: 800px;
-    aspect-ratio: 16/9;
-    background-color: #5c94fc; /* لون سماء ماريو الأزرق */
-    border: 4px solid #fff;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    width: 100%; max-width: 768px; aspect-ratio: 16/10;
+    background: #5C94FC; /* لون سماء ماريو */
+    border: 4px solid #eee;
+    box-shadow: 0 0 30px rgba(0,0,0,0.7);
 }
 
-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    image-rendering: pixelated; /* يخلي الرسم مربعات واضحة مثل الاتاري */
-}
+canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
 
-/* واجهة المعلومات */
 #hud {
-    position: absolute;
-    top: 10px; left: 10px; right: 10px;
-    display: flex;
-    justify-content: space-between;
-    color: #fff;
-    text-shadow: 2px 2px #000;
-    font-size: 14px;
-    pointer-events: none;
-    direction: ltr; /* عشان الارقام تطلع صح */
+    position: absolute; top: 15px; left: 15px; right: 15px;
+    display: flex; justify-content: space-between;
+    color: #fff; font-size: 14px; text-shadow: 2px 2px #000;
+    pointer-events: none; direction: ltr;
 }
-.hud-box { text-align: center; }
+#hud div { text-align: center; }
 
-/* الشاشات المنبثقة */
-.screen {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    z-index: 10;
+.overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+    display: none; flex-direction: column; justify-content: center; align-items: center;
+    color: #fff; z-index: 100;
 }
-.screen.active { display: flex; }
+.overlay.active { display: flex; }
 
-#start-screen h1 {
-    color: #ffce00;
-    text-shadow: 4px 4px #b80000;
-    font-size: 30px;
-    margin-bottom: 20px;
-    text-align: center;
-    line-height: 1.5;
-}
-#start-screen p { animation: blink 1s infinite; cursor: pointer; }
-
+#start-screen h1 { color: #E70000; text-shadow: 3px 3px #000; font-size: 28px; text-align: center; line-height: 1.5; }
+#start-screen p { margin-top: 20px; animation: blink 0.8s infinite; cursor: pointer; }
 @keyframes blink { 50% { opacity: 0; } }
 
-/* تصميم السؤال */
-.quiz-box {
-    background: #5c94fc;
-    border: 4px solid #fff;
-    padding: 20px;
-    border-radius: 8px;
-    width: 80%;
-    max-width: 500px;
+/* ستايل السؤال */
+.quiz-modal {
+    background: #5C94FC; border: 4px solid #fff; padding: 20px;
+    width: 85%; max-width: 450px; border-radius: 8px; box-shadow: 8px 8px 0 #000;
     text-align: center;
-    box-shadow: 8px 8px 0px #000;
 }
+.timer-bar { width: 100%; height: 8px; background: #000; margin: 10px 0; }
+#timer-fill { width: 100%; height: 100%; background: #00E700; transition: width 1s linear; }
 
-.timer-bar {
-    width: 100%; height: 10px; background: #000; margin-bottom: 15px;
-}
-#timer-fill {
-    width: 100%; height: 100%; background: #00e700;
-    transition: width 1s linear;
-}
+.math-display { margin: 20px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; }
+.q-text { font-size: 24px; margin-top: 15px; text-shadow: 2px 2px #000; direction: ltr; }
 
-.question-area { margin-bottom: 20px; }
-.math-text { font-size: 24px; margin-top: 10px; text-shadow: 2px 2px #000; }
-
-.visual-math {
-    display: flex; justify-content: center; gap: 20px; margin-bottom: 10px;
-}
-.visual-group { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; max-width: 100px; }
+.visual-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; min-height: 40px; }
 .dot {
-    width: 12px; height: 12px; background: #ff4444; border-radius: 50%;
-    border: 2px solid #fff; box-shadow: 1px 1px 0 #000;
+    width: 20px; height: 20px; background: #E70000; border-radius: 50%;
+    border: 2px solid #fff; box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    position: relative;
 }
-.operator { font-size: 20px; align-self: center; font-weight: bold; }
+/* الكرة المشطوبة */
+.dot.crossed { background: #888; opacity: 0.7; }
+.dot.crossed::after {
+    content: '✖'; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%); color: #fff; font-size: 16px; font-weight: bold;
+}
+.operator-sign { font-size: 24px; align-self: center; margin: 0 10px; }
 
-.answers-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-}
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ans-btn {
-    background: #ffce00; border: 4px solid #000;
-    padding: 15px; font-family: inherit; font-size: 18px;
-    cursor: pointer; box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
-    color: #000;
+    background: #E70000; border: 2px solid #fff; color: white;
+    padding: 12px; font-family: inherit; font-size: 16px; cursor: pointer;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
 }
-.ans-btn:active { transform: translate(4px, 4px); box-shadow: none; }
+.ans-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(0,0,0,0.4); }
 
-/* تحكم الجوال */
 #mobile-controls {
-    display: none;
-    position: absolute; bottom: 20px; left: 10px; right: 10px;
+    display: none; position: absolute; bottom: 20px; left: 10px; right: 10px;
     justify-content: space-between;
 }
 @media (hover: none) and (pointer: coarse) { #mobile-controls { display: flex; } }
-
-.dpad { display: flex; gap: 10px; }
-button {
-    width: 60px; height: 60px; background: rgba(255,255,255,0.2);
-    border: 2px solid white; color: white; border-radius: 50%;
-    font-size: 20px; touch-action: manipulation;
-}
-#btn-jump { background: rgba(255, 0, 0, 0.4); }
+.dpad { display: flex; gap: 15px; }
+button { width: 65px; height: 65px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid #fff; color: #fff; font-size: 20px; touch-action: manipulation; }
+#btn-jump { background: rgba(231, 0, 0, 0.4); }
