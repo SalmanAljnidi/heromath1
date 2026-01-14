@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>سوبر بطل المعرفة - الإصدار الأكيد</title>
+    <title>سوبر بطل المعرفة - التشخيص</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Press+Start+2P&display=swap');
         
@@ -22,7 +22,7 @@
             aspect-ratio: 16/10;
             background: #5C94FC;
             border: 2px solid #fff;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
             overflow: hidden;
         }
 
@@ -39,7 +39,7 @@
 
         /* الشاشات */
         .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
             display: none; flex-direction: column; 
             align-items: center; justify-content: center; z-index: 100;
         }
@@ -47,13 +47,13 @@
         
         h1 { color: #ffce00; text-shadow: 3px 3px 0 #d32f2f; font-size: 28px; margin-bottom: 30px; }
         
-        #btn-start {
+        button.start-btn {
             background: #00AA00; color: white; border: 4px solid white;
             padding: 20px 60px; font-size: 24px; cursor: pointer;
             font-family: 'Cairo'; font-weight: bold; border-radius: 50px;
             box-shadow: 0 8px 0 #006600; transition: transform 0.1s;
         }
-        #btn-start:active { transform: translateY(6px); box-shadow: 0 2px 0 #006600; }
+        button.start-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 #006600; }
 
         /* الأسئلة */
         .quiz-panel {
@@ -73,34 +73,36 @@
         .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .ans-btn { background: #fc0; border: 3px solid #000; padding: 15px; font-size: 22px; font-weight: bold; border-radius: 8px; font-family: 'Cairo'; }
 
-        /* تحكم الجوال - تعديل جذري */
+        /* تحكم الجوال */
         #mobile-controls {
-            position: absolute; bottom: 15px; left: 15px; right: 15px;
-            display: none; justify-content: space-between; z-index: 50;
+            position: absolute; bottom: 20px; left: 20px; right: 20px;
+            display: none; justify-content: space-between; z-index: 150;
             pointer-events: none;
         }
         @media (hover: none) and (pointer: coarse) { #mobile-controls { display: flex; } }
         
-        .dpad-zone { display: flex; gap: 25px; pointer-events: auto; }
+        .dpad-zone { display: flex; gap: 30px; pointer-events: auto; }
         .action-zone { pointer-events: auto; }
         
         .ctrl-btn {
             width: 80px; height: 80px; 
-            background: rgba(255,255,255,0.15);
-            border: 3px solid rgba(255,255,255,0.5); 
+            background: rgba(255,255,255,0.2);
+            border: 3px solid rgba(255,255,255,0.6); 
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 35px; color: white;
+            font-size: 40px; color: white;
             backdrop-filter: blur(4px);
             touch-action: none;
         }
-        .ctrl-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.95); }
-        .btn-a { background: rgba(255, 50, 50, 0.2); border-color: rgba(255, 100, 100, 0.6); font-weight: 900; }
+        .ctrl-btn:active { background: rgba(255,255,255,0.5); transform: scale(0.95); }
+        .btn-a { background: rgba(255, 60, 60, 0.3); border-color: rgba(255, 100, 100, 0.7); font-weight: 900; }
         
-        .footer { margin-top: 10px; color: #555; font-size: 11px; }
+        .footer { margin-top: 10px; color: #777; font-size: 11px; }
     </style>
 </head>
 <body>
+
+<script>window.onerror = function(msg, url, line) { alert("خطأ في اللعبة:\n" + msg + "\nالسطر: " + line); return false; };</script>
 
 <div id="game-frame">
     <canvas id="canvas"></canvas>
@@ -114,7 +116,7 @@
     <div id="start-screen" class="overlay active">
         <h1>سوبر بطل المعرفة</h1>
         <p>اضغط للبدء</p>
-        <button id="btn-start">ابدأ اللعبة ▶</button>
+        <button class="start-btn" onclick="startGame()">ابدأ اللعبة ▶</button>
     </div>
 
     <div id="quiz-screen" class="overlay">
@@ -129,11 +131,11 @@
 
     <div id="mobile-controls">
         <div class="dpad-zone">
-            <div class="ctrl-btn" id="btn-left">◀</div>
-            <div class="ctrl-btn" id="btn-right">▶</div>
+            <div class="ctrl-btn" ontouchstart="setInput('left',true)" ontouchend="setInput('left',false)" onmousedown="setInput('left',true)" onmouseup="setInput('left',false)">◀</div>
+            <div class="ctrl-btn" ontouchstart="setInput('right',true)" ontouchend="setInput('right',false)" onmousedown="setInput('right',true)" onmouseup="setInput('right',false)">▶</div>
         </div>
         <div class="action-zone">
-            <div class="ctrl-btn btn-a" id="btn-jump">A</div>
+            <div class="ctrl-btn btn-a" ontouchstart="setInput('jump',true)" ontouchend="setInput('jump',false)" onmousedown="setInput('jump',true)" onmouseup="setInput('jump',false)">A</div>
         </div>
     </div>
 </div>
@@ -149,44 +151,14 @@ const HEIGHT = 240;
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
 
-// === 1. النظام الصوتي (الآمن) ===
-// هذا النظام يضمن عدم تعليق اللعبة إذا فشل الصوت
-const AudioSys = {
-    ctx: null,
-    init: function() {
-        try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if(AudioContext) {
-                this.ctx = new AudioContext();
-                if(this.ctx.state === 'suspended') this.ctx.resume();
-            }
-        } catch(e) { console.log('Audio disabled'); }
-    },
-    play: function(type) {
-        if(!this.ctx) return;
-        try {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            const t = this.ctx.currentTime;
-            
-            if(type==='jump') {
-                osc.type='square'; osc.frequency.setValueAtTime(150,t);
-                osc.frequency.linearRampToValueAtTime(300,t+0.1);
-                gain.gain.setValueAtTime(0.1,t); gain.gain.linearRampToValueAtTime(0,t+0.1);
-                osc.start(t); osc.stop(t+0.1);
-            } else if(type==='coin') {
-                osc.type='sine'; osc.frequency.setValueAtTime(900,t);
-                osc.frequency.setValueAtTime(1200,t+0.1);
-                gain.gain.setValueAtTime(0.1,t); gain.gain.linearRampToValueAtTime(0,t+0.2);
-                osc.start(t); osc.stop(t+0.2);
-            }
-        } catch(e){}
-    }
-};
+// === المتغيرات العامة ===
+let state = 'MENU';
+let animationId;
+let lastTime = 0;
+let inputs = { left:false, right:false, jump:false };
+let audioCtx = null;
 
-// === 2. الرسومات (بيكسل آرت) ===
+// === الرسومات ===
 const Pal = {R:'#D00', S:'#FB8', B:'#00A', W:'#FFF', O:'#FA0', K:'#740', G:'#0A0', Z:'#000'};
 function sprite(d) {
     const c=document.createElement('canvas'); c.width=16; c.height=16; const x=c.getContext('2d');
@@ -203,36 +175,24 @@ const GFX = {
     goomba: sprite(["_______ZZ_______","______ZRRZ______","_____ZRRRRZ_____","____ZRRRRRRZ____","___ZRRRRRRRRZ___","___ZRRZRRZRRZ___","__ZRRRWZZWRRZZ__","__ZRRRZZZZRRRZ__","__ZRRRRRRRRRRZ__","___ZRRRRRRRRZ___","____ZZZZZZZZ____","____ZKKZZKKZ____","___ZKKKZZKKKZ___","___ZKKKZZKKKZ___","___ZZZZ__ZZZZ___","________________"])
 };
 
-// === 3. منطق اللعبة ===
+// === اللعبة ===
 let Game = {
-    running: false,
-    tiles: [],
-    enemies: [],
-    cameraX: 0,
-    score: 0, coins: 0,
+    cameraX: 0, score: 0, coins: 0,
+    tiles: [], enemies: [],
     
-    start: function() {
-        AudioSys.init();
-        document.getElementById('start-screen').classList.remove('active');
-        this.buildLevel();
-        this.running = true;
-        Player.reset();
-        this.loop();
-    },
-    
-    buildLevel: function() {
-        // خريطة بسيطة ومضمونة
-        const map = 
-        "                                                                                                   F"+
-        "                ?                      B?B?B                     ?        B?B                      F"+
-        "                                                                                                   F"+
-        "         E              P          E             P           E   E       BBBBB                     F"+
-        "MMMMMMMMMMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM";
-        
+    initLevel: function() {
         this.tiles = [];
         this.enemies = [];
-        const floor = HEIGHT - 32;
+        Player.reset();
+        this.cameraX = 0;
         
+        const map = "                                                                                                   F"+
+                    "                ?                      B?B?B                     ?        B?B                      F"+
+                    "                                                                                                   F"+
+                    "         E              P          E             P           E   E       BBBBB                     F"+
+                    "MMMMMMMMMMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM";
+        
+        const floor = HEIGHT - 32;
         for(let i=0; i<map.length; i++) {
             let ch = map[i];
             let x = i*16;
@@ -245,34 +205,26 @@ let Game = {
         }
     },
     
-    loop: function() {
-        if(!this.running) return;
-        this.update();
-        this.draw();
-        requestAnimationFrame(()=>this.loop());
-    },
-    
     update: function() {
         Player.update();
         
-        // الكاميرا تتبع اللاعب
+        // الكاميرا
         let targetX = Player.x - WIDTH * 0.4;
         if(targetX < 0) targetX = 0;
         this.cameraX += (targetX - this.cameraX) * 0.1;
-        if(Player.x < this.cameraX) Player.x = this.cameraX; // جدار أيسر
+        if(Player.x < this.cameraX) Player.x = this.cameraX;
         
         // الأعداء
         this.enemies.forEach(e => {
             if(e.dead) return;
             if(Math.abs(e.x - Player.x) < WIDTH) {
                 e.x += e.vx * 0.016;
-                // تصادم بسيط
                 if(Player.x < e.x + 12 && Player.x + 12 > e.x && Player.y < e.y + 12 && Player.y + 16 > e.y) {
                     if(Player.vy > 0 && Player.y < e.y + 8) {
                         e.dead = true;
                         Player.vy = -200;
                         this.score += 200;
-                        AudioSys.play('coin');
+                        playSound('coin');
                         e.y = 1000;
                     } else {
                         Player.die();
@@ -309,7 +261,6 @@ let Game = {
             if(!e.dead && e.x > start && e.x < end) ctx.drawImage(GFX.goomba, e.x, e.y);
         });
         
-        // رسم اللاعب (عكس الاتجاه)
         ctx.save();
         if(Player.dir === -1) {
             ctx.translate(Math.floor(Player.x)+16, Math.floor(Player.y));
@@ -319,7 +270,6 @@ let Game = {
             ctx.drawImage(GFX.mario, Math.floor(Player.x), Math.floor(Player.y));
         }
         ctx.restore();
-        
         ctx.restore();
     }
 };
@@ -329,19 +279,17 @@ const Player = {
     reset: function() { this.x=50; this.y=100; this.vx=0; this.vy=0; },
     
     update: function() {
-        // الحركة
-        if(Input.right) { this.vx = 120; this.dir = 1; }
-        else if(Input.left) { this.vx = -120; this.dir = -1; }
+        if(inputs.right) { this.vx = 120; this.dir = 1; }
+        else if(inputs.left) { this.vx = -120; this.dir = -1; }
         else { this.vx = 0; }
         
         this.x += this.vx * 0.016;
         this.collide(true);
         
-        // القفز
-        if(Input.jump && this.grounded) {
+        if(inputs.jump && this.grounded) {
             this.vy = -280;
             this.grounded = false;
-            AudioSys.play('jump');
+            playSound('jump');
         }
         
         this.vy += 800 * 0.016;
@@ -351,10 +299,9 @@ const Player = {
         
         if(this.y > HEIGHT) this.die();
         
-        // الفوز
         if(this.x > Game.tiles[Game.tiles.length-1].x - 100) {
             alert('مبروك الفوز!');
-            Game.start();
+            startGame();
         }
     },
     
@@ -370,8 +317,8 @@ const Player = {
                     if(this.vy > 0) { this.y = t.y - p.h; this.vy = 0; this.grounded = true; }
                     else if(this.vy < 0) { 
                         this.y = t.y + 16; this.vy = 0; 
-                        if(t.t==='brick') AudioSys.play('break');
-                        if(t.t==='qblock') { t.t='brick'; Game.coins++; Game.score+=100; AudioSys.play('coin'); }
+                        if(t.t==='brick') playSound('break');
+                        if(t.t==='qblock') { t.t='brick'; Game.coins++; Game.score+=100; playSound('coin'); }
                     }
                 }
             }
@@ -379,29 +326,77 @@ const Player = {
     },
     
     die: function() {
-        Game.running = false;
+        state = 'QUIZ';
         document.getElementById('quiz-screen').classList.add('active');
         Quiz.init();
     }
 };
 
-const Input = { left:false, right:false, jump:false };
+// === دالة البدء (مستقلة لتجنب الأخطاء) ===
+function startGame() {
+    try {
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+    } catch(e) { console.log("Audio failed, game continues"); }
+
+    document.getElementById('start-screen').classList.remove('active');
+    Game.initLevel();
+    state = 'PLAYING';
+    loop();
+}
+
+function loop() {
+    if(state !== 'PLAYING') return;
+    Game.update();
+    Game.draw();
+    requestAnimationFrame(loop);
+}
+
+// === الصوت البسيط ===
+function playSound(type) {
+    if(!audioCtx) return;
+    try {
+        const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        const t=audioCtx.currentTime;
+        if(type==='jump'){ o.frequency.setValueAtTime(200,t); o.frequency.linearRampToValueAtTime(400,t+0.1); g.gain.setValueAtTime(0.1,t); o.start(t); o.stop(t+0.1); }
+        if(type==='coin'){ o.frequency.setValueAtTime(900,t); g.gain.setValueAtTime(0.1,t); o.start(t); o.stop(t+0.1); }
+        if(type==='break'){ o.type='sawtooth'; o.frequency.setValueAtTime(100,t); g.gain.setValueAtTime(0.1,t); o.start(t); o.stop(t+0.1); }
+    } catch(e){}
+}
+
+// === تحكم الجوال (مباشر) ===
+window.setInput = function(key, val) {
+    inputs[key] = val;
+};
+
+// === تحكم الكيبورد ===
+window.addEventListener('keydown', e => {
+    if(e.code==='ArrowRight') inputs.right=true;
+    if(e.code==='ArrowLeft') inputs.left=true;
+    if(e.code==='Space'||e.code==='ArrowUp') inputs.jump=true;
+});
+window.addEventListener('keyup', e => {
+    if(e.code==='ArrowRight') inputs.right=false;
+    if(e.code==='ArrowLeft') inputs.left=false;
+    if(e.code==='Space'||e.code==='ArrowUp') inputs.jump=false;
+});
+
+// === Quiz Logic ===
 const Quiz = {
     timer: null,
     init: function() {
-        // إنشاء سؤال
         let a = Math.floor(Math.random()*5)+1;
         let b = Math.floor(Math.random()*5);
         let isAdd = Math.random()>0.5;
+        if(!isAdd && b>a) [a,b] = [b,a];
         let ans = isAdd ? a+b : a-b;
-        if(!isAdd && b>a) [a,b] = [b,a]; ans = a-b;
         
         const map = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
         const toAr = n => (''+n).replace(/\d/g, d=>map[d]);
         
         document.getElementById('q-text').innerText = `${toAr(a)} ${isAdd?'+':'-'} ${toAr(b)} = ؟`;
         
-        // كرات
         const viz = document.getElementById('vis-dots');
         viz.innerHTML = '';
         for(let i=0; i<a; i++) {
@@ -410,7 +405,6 @@ const Quiz = {
             viz.appendChild(d);
         }
         
-        // خيارات
         const grid = document.getElementById('ans-btns');
         grid.innerHTML = '';
         let opts = [ans];
@@ -423,9 +417,9 @@ const Quiz = {
                 if(o===ans) {
                     clearInterval(this.timer);
                     document.getElementById('quiz-screen').classList.remove('active');
-                    Game.running = true;
+                    state = 'PLAYING';
                     Player.y = 0; Player.vy = 0; Player.x = Math.max(50, Player.x-30);
-                    Game.loop();
+                    loop();
                 } else btn.style.background='#555';
             };
             grid.appendChild(btn);
@@ -440,24 +434,6 @@ const Quiz = {
         }, 1000);
     }
 };
-
-// === ربط الأزرار (تصحيح الاتجاهات) ===
-function bindBtn(id, key) {
-    const b = document.getElementById(id);
-    b.addEventListener('touchstart', (e)=>{ e.preventDefault(); Input[key]=true; });
-    b.addEventListener('touchend', (e)=>{ e.preventDefault(); Input[key]=false; });
-    b.addEventListener('mousedown', (e)=>{ e.preventDefault(); Input[key]=true; });
-    b.addEventListener('mouseup', (e)=>{ e.preventDefault(); Input[key]=false; });
-}
-
-// هنا التصحيح: الزر اليمين يفعل right، واليسار يفعل left
-bindBtn('btn-left', 'left');
-bindBtn('btn-right', 'right');
-bindBtn('btn-jump', 'jump');
-
-// زر البدء
-document.getElementById('btn-start').addEventListener('click', ()=>{ Game.start(); });
-
 </script>
 </body>
 </html>
