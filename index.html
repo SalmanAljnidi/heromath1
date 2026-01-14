@@ -3,584 +3,457 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>سوبر بطل المعرفة - V16</title>
+    <title>Super Mario Logic - Stable</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
-        * { box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-select: none; }
+        body { margin: 0; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; touch-action: none; font-family: 'Press Start 2P', cursive; }
         
-        body {
-            margin: 0; background: #202020; color: white;
-            font-family: 'Cairo', sans-serif;
-            height: 100vh; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            overflow: hidden;
+        #game-container {
+            position: relative; width: 100%; max-width: 800px; aspect-ratio: 16/10;
+            background: #5C94FC; border: 4px solid #fff; overflow: hidden;
         }
-
-        #game-frame {
-            position: relative;
-            width: 100%; max-width: 800px;
-            aspect-ratio: 16/10;
-            background: #6b8cff; /* لون سماء ماريو */
-            border: 4px solid #fff;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            overflow: hidden;
-        }
-
+        
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+        
+        #ui {
+            position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between;
+            color: #fff; text-shadow: 2px 2px #000; font-size: 14px; pointer-events: none; direction: ltr;
+        }
+        
+        .screen {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none;
+            flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; color: #fff;
+        }
+        .screen.active { display: flex; }
+        
+        button {
+            margin-top: 20px; padding: 15px 30px; font-family: inherit; font-size: 16px;
+            background: #e60012; color: #fff; border: 4px solid #fff; cursor: pointer;
+        }
+        button:active { transform: scale(0.95); }
 
-        /* HUD */
-        #hud {
-            position: absolute; top: 15px; left: 15px; right: 15px;
-            display: flex; justify-content: space-between;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 14px; text-shadow: 2px 2px 0 #000;
-            pointer-events: none; z-index: 20; direction: ltr;
-        }
-
-        /* Screens */
-        .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
-            display: none; flex-direction: column; 
-            align-items: center; justify-content: center; z-index: 100;
-            text-align: center;
-        }
-        .overlay.active { display: flex; }
-        
-        h1 { color: #ffce00; text-shadow: 3px 3px 0 #d32f2f; font-size: 32px; margin-bottom: 20px; }
-        p { margin-bottom: 30px; color: #ddd; font-size: 16px; }
-        
-        button.start-btn {
-            background: #00AA00; color: white; border: 4px solid white;
-            padding: 15px 50px; font-size: 22px; cursor: pointer;
-            font-family: 'Cairo'; font-weight: bold; border-radius: 50px;
-            box-shadow: 0 6px 0 #006600; transition: transform 0.1s;
-        }
-        button.start-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #006600; }
-
-        /* Quiz */
-        .quiz-panel {
-            background: #6b8cff; border: 4px solid white; padding: 20px;
-            border-radius: 20px; width: 90%; max-width: 450px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-        }
-        .timer-bar { width: 100%; height: 12px; background: #222; margin-bottom: 15px; border-radius: 6px; overflow: hidden; }
-        #timer-val { width: 100%; height: 100%; background: #0f0; }
-        
-        .dots-area { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 15px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
-        .dot { width: 24px; height: 24px; background: #f44; border-radius: 50%; border: 2px solid #fff; }
-        .dot.x { background: #555; opacity: 0.5; position: relative; }
-        .dot.x::after { content:'✖'; position: absolute; left:50%; top:50%; transform:translate(-50%,-50%); color: #fff; font-size: 16px; }
-        
-        .q-text { font-size: 32px; direction: ltr; margin: 15px 0; text-shadow: 2px 2px 0 #000; font-family: 'Press Start 2P'; }
-        
-        .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .ans-btn { background: #fc0; border: 3px solid #000; padding: 12px; font-size: 24px; font-weight: bold; border-radius: 10px; font-family: 'Cairo'; cursor: pointer; }
+        /* Quiz Styles */
+        .quiz-box { background: #5C94FC; border: 4px solid #fff; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
+        .timer-bar { height: 10px; background: #000; margin: 10px 0; }
+        #timer-fill { height: 100%; background: #0f0; width: 100%; }
+        .visuals { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; margin: 15px 0; }
+        .ball { width: 20px; height: 20px; background: #f00; border: 2px solid #fff; border-radius: 50%; }
+        .ball.cut { opacity: 0.3; text-decoration: line-through; }
+        .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ans-btn { background: #fb0; border: 2px solid #000; color: #000; padding: 10px; }
 
         /* Controls */
-        #controls {
-            position: absolute; bottom: 20px; left: 20px; right: 20px;
-            display: none; justify-content: space-between; z-index: 50;
-            pointer-events: none;
-        }
+        #controls { position: absolute; bottom: 20px; left: 20px; right: 20px; display: none; justify-content: space-between; pointer-events: none; }
         @media (hover: none) and (pointer: coarse) { #controls { display: flex; } }
-        
-        .dpad { display: flex; gap: 20px; pointer-events: auto; }
-        .action { pointer-events: auto; }
-        
-        .t-btn {
-            width: 80px; height: 80px; 
-            background: rgba(255,255,255,0.15);
-            border: 3px solid rgba(255,255,255,0.6); 
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 36px; color: white;
-            backdrop-filter: blur(4px);
+        .dpad, .action { display: flex; gap: 20px; pointer-events: auto; }
+        .btn-touch {
+            width: 70px; height: 70px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; color: #fff;
         }
-        .t-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.95); }
-        .btn-a { background: rgba(255, 60, 60, 0.3); border-color: rgba(255, 100, 100, 0.7); font-weight: 900; }
-
-        .footer { margin-top: 15px; color: #777; font-size: 11px; }
+        .btn-touch:active { background: rgba(255,255,255,0.4); }
     </style>
 </head>
 <body>
 
-<script>window.onerror = function(msg, url, line) { alert("⚠️ خطأ في اللعبة:\n" + msg + "\nفي السطر: " + line); return false; };</script>
-
-<div id="game-frame">
+<div id="game-container">
     <canvas id="canvas"></canvas>
-    
-    <div id="hud">
-        <div>SCORE<br><span id="score">000000</span></div>
-        <div>COINS<br><span id="coins">x00</span></div>
-        <div>WORLD<br><span id="world">1-1</span></div>
+    <div id="ui">
+        <div>MARIO<br><span id="score">000000</span></div>
+        <div>COINS<br><span id="coins">00</span></div>
+        <div>WORLD<br><span>1-1</span></div>
     </div>
 
-    <div id="start-screen" class="overlay active">
-        <h1>سوبر بطل المعرفة</h1>
-        <p>اجمع العملات وحل المسائل!</p>
-        <button class="start-btn" id="btn-start">ابدأ اللعب ▶</button>
+    <div id="start-screen" class="screen active">
+        <h1 style="color:#fb0; text-shadow:4px 4px #d00;">SUPER HERO</h1>
+        <p>Use Arrows/Space or Touch</p>
+        <button onclick="Game.init()">START GAME</button>
     </div>
 
-    <div id="quiz-screen" class="overlay">
-        <div class="quiz-panel">
-            <h2>فرصة للنجاة!</h2>
-            <div class="timer-bar"><div id="timer-val"></div></div>
-            <div class="dots-area" id="visuals"></div>
-            <div class="q-text" id="question"></div>
-            <div class="ans-grid" id="answers"></div>
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-box">
+            <h2>MATH SAVE!</h2>
+            <div class="timer-bar"><div id="timer-fill"></div></div>
+            <div class="visuals" id="q-viz"></div>
+            <h3 id="q-text" style="direction:ltr"></h3>
+            <div class="answers" id="q-ans"></div>
         </div>
     </div>
 
     <div id="controls">
         <div class="dpad">
-            <div class="t-btn" id="btn-left">◀</div>
-            <div class="t-btn" id="btn-right">▶</div>
+            <div class="btn-touch" id="btn-left">◀</div>
+            <div class="btn-touch" id="btn-right">▶</div>
         </div>
         <div class="action">
-            <div class="t-btn btn-a" id="btn-jump">A</div>
+            <div class="btn-touch" id="btn-jump">A</div>
         </div>
     </div>
 </div>
 
-<div class="footer">جميع الحقوق محفوظة لـ سلمان الجنيدي</div>
-
 <script>
-// === 1. إعدادات الكانفاس ===
+// --- CORE ENGINE ---
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const WIDTH = 256;
-const HEIGHT = 240;
-canvas.width = WIDTH;
-canvas.height = HEIGHT;
+const W = 256;
+const H = 240;
+canvas.width = W; 
+canvas.height = H;
 
-// === 2. المتغيرات العامة ===
-let state = 'MENU';
-let lastTime = 0;
-let cameraX = 0;
-let score = 0;
-let coins = 0;
-let inputs = { left:false, right:false, jump:false };
-let audioCtx = null;
-let safeSpot = {x:50, y:100};
-
-// === 3. نظام الرسومات (ألوان ماريو الأصلية) ===
-const Pal = {
-    r:'#D70000', s:'#FFCC99', b:'#0000D3', w:'#FFFFFF', 
-    o:'#E79C21', k:'#943E00', l:'#D88820', // ألوان الأرضية (بني وبرتقالي)
-    g:'#00A800', d:'#005000', y:'#FFD700', z:'#000'
-};
-
-function makeSprite(art) {
-    const c = document.createElement('canvas');
-    c.width=16; c.height=16;
-    const x = c.getContext('2d');
-    for(let i=0; i<16; i++) {
-        if(!art[i]) continue;
-        for(let j=0; j<16; j++) {
-            const p = art[i][j];
-            if(Pal[p]) { x.fillStyle=Pal[p]; x.fillRect(j,i,1,1); }
-        }
-    }
+// --- ASSETS (Base64 for reliability) ---
+// Pixel Art Generators
+const Colors = {r:'#D70000', s:'#FFCC99', b:'#0000D3', o:'#E79C21', k:'#943E00', l:'#D88820', g:'#00A800', y:'#FFD700'};
+function drawSprite(p) {
+    const c = document.createElement('canvas'); c.width=16; c.height=16; const x=c.getContext('2d');
+    for(let i=0; i<16; i++) for(let j=0; j<16; j++) if(Colors[p[i][j]]) { x.fillStyle=Colors[p[i][j]]; x.fillRect(j,i,1,1); }
     return c;
 }
 
-// تعريف الرسومات (مصححة وكاملة)
 const GFX = {
-    mario: makeSprite([
-        "_____rrrrr______","____rrrrrrrrr___","____kkkskks_____","___skskkkkskk___",
-        "___skskkkkskk___","___sskkkkssss___","_____sssssss____","____rrrbrrr_____",
-        "___rrrrbrrrr____","__rrrrbbbbrrr___","__bbrbwwwbbrr___","__bbbwwwwwbbb___",
-        "__bbwwwwwwwbb___","___bbb___bbb____","__kkkk___kkkk___","_kkkkk___kkkkk__"
-    ]),
-    brick: makeSprite([
-        "kkkkkkkkkkkkkkkk","kllllklllllllllko","kllllklllllllllko","kkkkkkkkkkkkkkkk",
-        "kllllllllklklllko","kllllllllklklllko","kkkkkkkkkkkkkkkk","klllkllllllllllko",
-        "klllkllllllllllko","kkkkkkkkkkkkkkkk","kllllklllllllllko","kllllklllllllllko",
-        "kkkkkkkkkkkkkkkk","kllllllllklklllko","kllllllllklklllko","kkkkkkkkkkkkkkkk"
-    ]),
-    qblock: makeSprite([
-        "kkkkkkkkkkkkkkkk","koooooooooooookz","koykkkkkkkkkyokz","koykyyooooykyokz",
-        "koykyyooooykyokz","koykyyyyykykyokz","koykyyyykkykyokz","koykkkkkyyykyokz",
-        "koyyyyyyykykyokz","koyyyyyyykykyokz","koyyyyyyyyyyyokz","koyyyyyyykykyokz",
-        "koyyyyyyykykyokz","koyyyyyyyyyyyokz","kzzzzzzzzzzzzzzz","kkkkkkkkkkkkkkkk"
-    ]),
-    ground: makeSprite([
-        "lkkkkkkkkkkkkkkl","kllllllllllllllk","kllllllllllllllk","kllllllllllllllk",
-        "kllkkkkkkkkkkllk","kllkllllllllkllk","kllkllllllllkllk","kllkllllllllkllk",
-        "kllkkkkkkkkkkllk","kllkllllllllkllk","kllkllllllllkllk","kllkllllllllkllk",
-        "kllkkkkkkkkkkllk","kllllllllllllllk","lkkkkkkkkkkkkkkl","llllllllllllllll"
-    ]),
-    pipe: makeSprite([
-        "gggggggggggggggg","gzzzzzzzzzzzzzzg","gzzggggggggggzzg","gzzggggggggggzzg",
-        "gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzzzzzzzzzzzzzg",
-        "gggggggggggggggg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg",
-        "gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg"
-    ]),
-    goomba: makeSprite([
-        "_______zz_______","______zrrz______","_____zrrrrz_____","____zrrrrrrz____",
-        "___zrrrrrrrrz___","___zrrzrrzrrz___","__zrrrwzzwrrzz__","__zrrrzzzzrrrz__",
-        "__zrrrrrrrrrrz__","___zrrrrrrrrz___","____zzzzzzzz____","____zkkzzkkz____",
-        "___zkkkzzkkkz___","___zkkkzzkkkz___","___zzzz__zzzz___","________________"
-    ])
+    mario: drawSprite(["_____rrrrr______","____rrrrrrrrr___","____kkkskks_____","___skskkkkskk___","___skskkkkskk___","___sskkkkssss___","_____sssssss____","____rrrbrrr_____","___rrrrbrrrr____","__rrrrbbbbrrr___","__bbrbwwwbbrr___","__bbbwwwwwbbb___","__bbwwwwwwwbb___","___bbb___bbb____","__kkkk___kkkk___","_kkkkk___kkkkk__"]),
+    brick: drawSprite(["kkkkkkkkkkkkkkkk","kllllklllllllllko","kllllklllllllllko","kkkkkkkkkkkkkkkk","kllllllllklklllko","kllllllllklklllko","kkkkkkkkkkkkkkkk","klllkllllllllllko","klllkllllllllllko","kkkkkkkkkkkkkkkk","kllllklllllllllko","kllllklllllllllko","kkkkkkkkkkkkkkkk","kllllllllklklllko","kllllllllklklllko","kkkkkkkkkkkkkkkk"]),
+    block: drawSprite(["kkkkkkkkkkkkkkkk","koooooooooooookz","koykkkkkkkkkyokz","koykyyooooykyokz","koykyyooooykyokz","koykyyyyykykyokz","koykyyyykkykyokz","koykkkkkyyykyokz","koyyyyyyykykyokz","koyyyyyyykykyokz","koyyyyyyyyyyyokz","koyyyyyyykykyokz","koyyyyyyykykyokz","koyyyyyyyyyyyokz","kzzzzzzzzzzzzzzz","kkkkkkkkkkkkkkkk"]),
+    ground: drawSprite(["lkkkkkkkkkkkkkkl","kllllllllllllllk","kllllllllllllllk","kllllllllllllllk","kllkkkkkkkkkkllk","kllkllllllllkllk","kllkllllllllkllk","kllkllllllllkllk","kllkkkkkkkkkkllk","kllkllllllllkllk","kllkllllllllkllk","kllkllllllllkllk","kllkkkkkkkkkkllk","kllllllllllllllk","lkkkkkkkkkkkkkkl","llllllllllllllll"]),
+    pipe: drawSprite(["gggggggggggggggg","gzzzzzzzzzzzzzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzzzzzzzzzzzzzg","gggggggggggggggg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg","gzzggggggggggzzg"]),
+    goomba: drawSprite(["_______zz_______","______zrrz______","_____zrrrrz_____","____zrrrrrrz____","___zrrrrrrrrz___","___zrrzrrzrrz___","__zrrrwzzwrrzz__","__zrrrzzzzrrrz__","__zrrrrrrrrrrz__","___zrrrrrrrrz___","____zzzzzzzz____","____zkkzzkkz____","___zkkkzzkkkz___","___zkkkzzkkkz___","___zzzz__zzzz___","________________"])
 };
 
-// === 4. الكائنات والمنطق ===
-let tiles = [];
-let enemies = [];
-
-const Player = {
-    x: 50, y: 100, w: 12, h: 16,
-    vx: 0, vy: 0,
-    speed: 130, jumpForce: 310, gravity: 900,
-    grounded: false, dir: 1,
+// --- GAME STATE ---
+const Game = {
+    running: false,
+    width: 0,
+    tiles: [],
+    enemies: [],
+    camera: 0,
+    score: 0,
+    coins: 0,
+    safeSpot: {x:50, y:100},
     
-    reset: function() { this.x=50; this.y=100; this.vx=0; this.vy=0; }
-};
+    init: function() {
+        document.getElementById('start-screen').classList.remove('active');
+        this.buildLevel();
+        this.running = true;
+        this.lastT = performance.now();
+        Player.reset();
+        requestAnimationFrame(loop);
+    },
 
-// === 5. بناء المرحلة (نظام هندسي لضمان الأرضية) ===
-function generateLevel(idx) {
-    tiles = [];
-    enemies = [];
-    const groundY = HEIGHT - 32;
-    const length = 220 + (idx * 50); 
-    
-    let holeTimer = 0; // مؤقت لمنع الحفر المتتالية
+    // بناء يدوي للمرحلة (مضمون 100%)
+    buildLevel: function() {
+        this.tiles = [];
+        this.enemies = [];
+        const floorY = H - 32;
+        
+        // 1. الخريطة (رموز) - تصميم يدوي
+        // . = فراغ, # = أرض, B = طوب, ? = صندوق, P = أنبوب, E = عدو, F = علم
+        const map = 
+        "..................................................................................................................................................." +
+        "..................................................................................................................................................." +
+        "..................................................................................................................................................." +
+        "..................................................................................................................................................." +
+        "..................................................................................................................................................." +
+        "..................................................................................................................................................." +
+        "..................................................................................................................................................." +
+        "..................................................................................................................................................." +
+        "..................................................................................................................................................." +
+        "..............?.................B?B?B........................?..........B?B........................................................................" +
+        "..................................................................................................................................................." +
+        "..................................................................................................................................................." +
+        ".........E.........P..........E.......P..........E....E......BBBBB.......................P.........................E.....................F........." +
+        "########################..########################..########################..########################..########################..#################";
 
-    for(let i=0; i<length; i++) {
-        let isHole = false;
+        // تحويل الخريطة لكائنات
+        // الخريطة 14 سطر ارتفاع
+        const rows = 14;
+        const cols = map.length / rows;
+        this.width = cols * 16;
 
-        // منطق الحفر: مسموح فقط بعد المتر 20، وغير مسموح في النهاية
-        // ويجب أن يكون هناك مسافة 5 بلوكات على الأقل بين الحفر
-        if (i > 20 && i < length - 30) {
-            if (holeTimer === 0 && Math.random() < 0.08) {
-                isHole = true;
-                holeTimer = 5; // منع حفرة لمدة 5 بلوكات (مهبط آمن)
-            }
-        }
-        if (holeTimer > 0) holeTimer--;
-
-        // بناء الأرضية
-        if(!isHole) {
-            tiles.push({x:i*16, y:groundY, t:'ground'});
-            tiles.push({x:i*16, y:groundY+16, t:'ground'});
-        }
-    }
-    
-    // وضع الكائنات (فقط فوق الأرضية الموجودة)
-    for(let i=15; i<length-15; i++) {
-        // نتحقق: هل توجد أرضية هنا؟
-        let hasGround = tiles.some(t => t.x === i*16 && t.y === groundY);
-        // نتحقق: هل البلوكة اللي قبلنا كانت حفرة؟ (عشان ما نحط عائق في وجه القفزة)
-        let prevWasHole = !tiles.some(t => t.x === (i-1)*16 && t.y === groundY);
-
-        if (hasGround && !prevWasHole) {
-            // أنابيب
-            if (i % 25 === 0 && Math.random() < 0.8) {
-                let h = 32;
-                tiles.push({x:i*16, y:groundY-16, t:'pipe'});
-                tiles.push({x:i*16, y:groundY-32, t:'pipe'});
-                continue; // لا تضع شيئاً آخر هنا
-            }
-
-            // طوب
-            if (i % 4 === 0 && Math.random() < 0.4) {
-                let h = (Math.random() > 0.5) ? 48 : 80; 
-                let type = (Math.random() > 0.3) ? 'brick' : 'qblock';
-                tiles.push({x:i*16, y:groundY-h, t:type, oy:groundY-h});
+        for(let r=0; r<rows; r++) {
+            for(let c=0; c<cols; c++) {
+                const char = map[r * cols + c];
+                const x = c * 16;
+                const y = r * 16 + (H - rows*16); // محاذاة للأسفل
                 
-                // عدو (تحت الطوب)
-                if(Math.random() < 0.3) {
-                    enemies.push({x:i*16, y:groundY-16, w:16, h:16, vx:-30, vy:0, dead:false});
+                if(char === '#') {
+                    this.tiles.push({x, y, t:'ground'});
+                    this.tiles.push({x, y:y+16, t:'ground'}); // طبقة ثانية تحتها
+                } else if(char === 'B') {
+                    this.tiles.push({x, y, t:'brick', oy:y});
+                } else if(char === '?') {
+                    this.tiles.push({x, y, t:'block', oy:y});
+                } else if(char === 'P') {
+                    this.tiles.push({x, y, t:'pipe'});
+                    this.tiles.push({x, y:y+16, t:'pipe'});
+                } else if(char === 'F') {
+                    for(let k=0; k<10; k++) this.tiles.push({x, y:y-(k*16), t:'flag'});
+                } else if(char === 'E') {
+                    this.enemies.push({x, y, w:16, h:16, vx:-40, vy:0, dead:false});
                 }
             }
         }
     }
+};
+
+// --- PLAYER ---
+const Player = {
+    x: 50, y: 100, w: 12, h: 16,
+    vx: 0, vy: 0,
+    grounded: false,
+    speed: 120, jump: 330, grav: 900,
     
-    // علم النهاية
-    tiles.push({x:(length-5)*16, y:groundY-16, t:'flag'});
-    tiles.push({x:(length-5)*16, y:groundY-32, t:'flag'});
-    tiles.push({x:(length-5)*16, y:groundY-48, t:'flag'});
+    reset: function() { this.x=50; this.y=100; this.vx=0; this.vy=0; },
     
-    // إعادة تعيين
-    Player.reset();
-    cameraX = 0;
-    safeSpot = {x: 50, y: 100};
+    update: function(dt) {
+        // حركة
+        if(Inputs.right) this.vx = this.speed;
+        else if(Inputs.left) this.vx = -this.speed;
+        else this.vx = 0;
+        
+        this.x += this.vx * dt;
+        this.checkX();
+        
+        // قفز
+        if(Inputs.jump && this.grounded) {
+            this.vy = -this.jump;
+            this.grounded = false;
+        }
+        
+        this.vy += this.grav * dt;
+        this.y += this.vy * dt;
+        this.grounded = false;
+        this.checkY();
+        
+        // حدود وموت
+        if(this.y > H + 20) this.die();
+        if(this.x < Game.camera) this.x = Game.camera;
+        
+        // كاميرا
+        let target = this.x - W * 0.4;
+        if(target < 0) target = 0;
+        Game.camera += (target - Game.camera) * 0.1;
+        
+        // نقطة أمان
+        if(this.grounded) {
+            Game.safeSpot.x = this.x;
+            Game.safeSpot.y = this.y - 20;
+        }
+    },
+    
+    checkX: function() {
+        let p = {x:this.x, y:this.y, w:12, h:16};
+        for(let t of Game.tiles) {
+            if(t.t==='flag') continue;
+            if(intersect(p, {x:t.x, y:t.y, w:16, h:16})) {
+                if(this.vx > 0) this.x = t.x - 12;
+                else if(this.vx < 0) this.x = t.x + 16;
+                this.vx = 0;
+            }
+        }
+    },
+    
+    checkY: function() {
+        let p = {x:this.x, y:this.y, w:12, h:16};
+        for(let t of Game.tiles) {
+            if(t.t==='flag') continue;
+            if(intersect(p, {x:t.x, y:t.y, w:16, h:16})) {
+                if(this.vy > 0) { // هبوط
+                    this.y = t.y - 16;
+                    this.vy = 0;
+                    this.grounded = true;
+                } else if(this.vy < 0) { // رأس
+                    this.y = t.y + 16;
+                    this.vy = 0;
+                    if(t.t==='block') { t.t='brick'; Game.coins++; Game.score+=100; t.bounce=5; }
+                    if(t.t==='brick') { t.bounce=5; }
+                }
+            }
+        }
+    },
+    
+    die: function() {
+        Game.running = false;
+        Quiz.start();
+    }
+};
+
+function intersect(r1, r2) {
+    return r1.x < r2.x+r2.w && r1.x+r1.w > r2.x &&
+           r1.y < r2.y+r2.h && r1.y+r1.h > r2.y;
 }
 
-// === 6. حلقة اللعبة ===
-function startGame() {
-    try {
-        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-    } catch(e) {}
-    
-    document.getElementById('start-screen').classList.remove('active');
-    generateLevel(0);
-    state = 'PLAYING';
-    lastTime = performance.now();
-    requestAnimationFrame(loop);
-}
-
+// --- MAIN LOOP ---
 function loop() {
-    if(state !== 'PLAYING') return;
+    if(!Game.running) return;
     
     const now = performance.now();
-    let dt = (now - lastTime) / 1000;
-    if(dt > 0.05) dt = 0.05; // منع القفزات الكبيرة
-    lastTime = now;
+    let dt = (now - Game.lastT) / 1000;
+    if(dt > 0.05) dt = 0.05;
+    Game.lastT = now;
     
-    update(dt);
-    draw();
+    Player.update(dt);
     
-    requestAnimationFrame(loop);
-}
-
-function update(dt) {
-    // حركة اللاعب
-    if(inputs.right) { Player.vx = Player.speed; Player.dir = 1; }
-    else if(inputs.left) { Player.vx = -Player.speed; Player.dir = -1; }
-    else { Player.vx = 0; }
-    
-    Player.x += Player.vx * dt;
-    collide(true);
-    
-    if(inputs.jump && Player.grounded) {
-        Player.vy = -Player.jumpForce;
-        Player.grounded = false;
-        playSound('jump');
-    }
-    
-    Player.vy += Player.gravity * dt;
-    Player.y += Player.vy * dt;
-    Player.grounded = false;
-    collide(false);
-    
-    // حفظ مكان آمن
-    if(Player.grounded) {
-        safeSpot.x = Player.x;
-        safeSpot.y = Player.y - 20;
-    }
-
-    // موت
-    if(Player.y > HEIGHT + 20) die();
-    if(Player.x < cameraX) Player.x = cameraX;
-    
-    // كاميرا
-    let targetX = Player.x - WIDTH * 0.4;
-    if(targetX < 0) targetX = 0;
-    cameraX += (targetX - cameraX) * 0.1;
-    
-    // فوز
-    let last = tiles[tiles.length-1];
-    if(last && Player.x > last.x - 50) {
-        score += 1000;
-        generateLevel(1);
-    }
-    
-    // أعداء
-    enemies.forEach(e => {
+    // الأعداء
+    Game.enemies.forEach(e => {
         if(e.dead) return;
-        if(Math.abs(e.x - Player.x) < WIDTH + 32) {
+        if(Math.abs(e.x - Player.x) < W) {
             e.x += e.vx * dt;
             e.y += 500 * dt;
             
             // أرضية العدو
             let onG = false;
-            for(let t of tiles) {
-                if(t.t==='flag') continue;
-                if(rectIntersect(e, {x:t.x, y:t.y, w:16, h:16})) {
-                    if(e.y + 12 <= t.y) { e.y = t.y - 16; onG = true; }
+            for(let t of Game.tiles) {
+                if(t.t!=='flag' && intersect(e, {x:t.x, y:t.y, w:16, h:16})) {
+                    if(e.y+12 <= t.y) { e.y = t.y-16; onG=true; }
                     else { e.vx *= -1; }
                 }
             }
             
-            if(rectIntersect(Player, e)) {
-                if(Player.vy > 0 && Player.y < e.y + 8) {
+            // تصادم
+            if(intersect(Player, e)) {
+                if(Player.vy > 0 && Player.y < e.y+8) {
                     e.dead = true;
                     Player.vy = -200;
-                    score += 200;
-                    playSound('stomp');
+                    Game.score += 200;
                     e.y = 1000;
                 } else {
-                    die();
+                    Player.die();
                 }
             }
         }
     });
     
-    // واجهة
-    document.getElementById('score').innerText = score.toString().padStart(6,'0');
-    document.getElementById('coins').innerText = 'x' + coins.toString().padStart(2,'0');
-}
-
-function collide(isX) {
-    let p = {x:Player.x, y:Player.y, w:12, h:16};
-    for(let t of tiles) {
-        if(t.t==='flag') continue;
-        if(rectIntersect(p, {x:t.x, y:t.y, w:16, h:16})) {
-            if(isX) {
-                if(Player.vx > 0) Player.x = t.x - 12;
-                else if(Player.vx < 0) Player.x = t.x + 16;
-            } else {
-                if(Player.vy > 0) { Player.y = t.y - 16; Player.vy = 0; Player.grounded = true; }
-                else if(Player.vy < 0) { 
-                    Player.y = t.y + 16; Player.vy = 0;
-                    if(t.t==='brick') { t.bounce=6; playSound('break'); }
-                    if(t.t==='qblock') { t.t='brick'; t.bounce=6; coins++; score+=100; playSound('coin'); }
-                }
-            }
-        }
-    }
-}
-
-function rectIntersect(r1, r2) {
-    return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x &&
-           r1.y < r2.y + r2.h && r1.y + r1.h > r2.y;
+    draw();
+    requestAnimationFrame(loop);
+    
+    // UI Update
+    document.getElementById('score').innerText = Game.score.toString().padStart(6,'0');
+    document.getElementById('coins').innerText = Game.coins.toString().padStart(2,'0');
 }
 
 function draw() {
     ctx.fillStyle = '#5C94FC';
-    ctx.fillRect(0,0,WIDTH,HEIGHT);
+    ctx.fillRect(0,0,W,H);
     ctx.save();
-    ctx.translate(-Math.floor(cameraX), 0);
+    ctx.translate(-Math.floor(Game.camera), 0);
     
-    const start = cameraX - 16;
-    const end = cameraX + WIDTH + 16;
+    const start = Game.camera - 16;
+    const end = Game.camera + W + 16;
     
-    tiles.forEach(t => {
+    for(let t of Game.tiles) {
         if(t.x >= start && t.x <= end) {
             let y = t.y;
-            if(t.bounce) { y -= t.bounce; t.bounce *= 0.8; if(t.bounce<0.5) t.bounce=0; }
+            if(t.bounce) { y-=t.bounce; t.bounce--; if(t.bounce<0) t.bounce=0; }
             
             let img = GFX.ground;
             if(t.t==='brick') img=GFX.brick;
-            else if(t.t==='qblock') img=GFX.qblock;
-            else if(t.t==='pipe') { 
-                ctx.fillStyle='#0A0'; ctx.fillRect(t.x,t.y,16,16); 
-                ctx.strokeStyle='#050'; ctx.strokeRect(t.x,t.y,16,16); return; 
+            if(t.t==='block') img=GFX.block;
+            if(t.t==='pipe') { 
+                ctx.fillStyle='#00aa00'; ctx.fillRect(t.x,t.y,16,16); 
+                ctx.strokeStyle='#004400'; ctx.strokeRect(t.x,t.y,16,16); continue; 
             }
-            else if(t.t==='flag') {
-                ctx.fillStyle='#fff'; ctx.fillRect(t.x+6,t.y,4,16); return;
+            if(t.t==='flag') {
+                ctx.fillStyle='#fff'; ctx.fillRect(t.x+6,t.y,4,16); continue;
             }
             ctx.drawImage(img, t.x, y);
         }
-    });
+    }
     
-    enemies.forEach(e => {
-        if(!e.dead && e.x >= start && e.x <= end) ctx.drawImage(GFX.goomba, e.x, e.y);
-    });
+    for(let e of Game.enemies) {
+        if(!e.dead && e.x>=start && e.x<=end) ctx.drawImage(GFX.goomba, e.x, e.y);
+    }
     
+    // Player
     ctx.save();
-    if(Player.dir === -1) {
+    if(Player.vx < 0) {
         ctx.translate(Math.floor(Player.x)+16, Math.floor(Player.y));
-        ctx.scale(-1,1);
-        ctx.drawImage(GFX.mario, -2, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(GFX.mario, -4, 0);
     } else {
         ctx.drawImage(GFX.mario, Math.floor(Player.x), Math.floor(Player.y));
     }
     ctx.restore();
+    
     ctx.restore();
 }
 
-function die() {
-    state = 'QUIZ';
-    document.getElementById('quiz-screen').classList.add('active');
-    Quiz.init();
-}
-
-// === التحكم والصوت والأسئلة ===
-document.getElementById('btn-start-game').addEventListener('click', startGame);
-
-function bind(id, k) {
-    const el = document.getElementById(id);
-    el.addEventListener('touchstart', e=>{ e.preventDefault(); inputs[k]=true; });
-    el.addEventListener('touchend', e=>{ e.preventDefault(); inputs[k]=false; });
-    el.addEventListener('mousedown', e=>{ e.preventDefault(); inputs[k]=true; });
-    el.addEventListener('mouseup', e=>{ e.preventDefault(); inputs[k]=false; });
-}
-bind('btn-left', 'left');
-bind('btn-right', 'right');
-bind('btn-jump', 'jump');
-
-window.addEventListener('keydown', e => {
-    if(e.code==='ArrowRight') inputs.right=true;
-    if(e.code==='ArrowLeft') inputs.left=true;
-    if(e.code==='Space'||e.code==='ArrowUp') inputs.jump=true;
-});
-window.addEventListener('keyup', e => {
-    if(e.code==='ArrowRight') inputs.right=false;
-    if(e.code==='ArrowLeft') inputs.left=false;
-    if(e.code==='Space'||e.code==='ArrowUp') inputs.jump=false;
-});
-
+// --- QUIZ & INPUT ---
+const Inputs = { left:false, right:false, jump:false };
 const Quiz = {
     timer: null,
-    init: function() {
-        let a = Math.floor(Math.random()*5)+1;
+    start: function() {
+        document.getElementById('quiz-screen').classList.add('active');
+        let a = Math.floor(Math.random()*6);
         let b = Math.floor(Math.random()*5);
         let isAdd = Math.random()>0.5;
-        if(!isAdd && b>a) [a,b]=[b,a];
-        let ans = isAdd ? a+b : a-b;
+        let ans = isAdd ? a+b : Math.abs(a-b);
+        let op = isAdd ? '+' : '-';
+        if(!isAdd && b>a) [a,b] = [b,a]; // swap
         
-        const map = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-        const toAr = n => (''+n).replace(/\d/g, d=>map[d]);
-        document.getElementById('question').innerText = `${toAr(a)} ${isAdd?'+':'-'} ${toAr(b)} = ؟`;
+        const ar = n => (''+n).replace(/\d/g, d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+        document.getElementById('q-text').innerText = `${ar(a)} ${op} ${ar(b)} = ؟`;
         
-        const v = document.getElementById('visuals');
+        const v = document.getElementById('q-viz');
         v.innerHTML = '';
         for(let i=0; i<a; i++) {
-            let d=document.createElement('div'); d.className='dot';
-            if(!isAdd && i>=(a-b)) d.classList.add('x');
+            let d = document.createElement('div'); d.className='ball';
+            if(!isAdd && i>=(a-b)) d.classList.add('cut');
             v.appendChild(d);
         }
         
-        const g = document.getElementById('answers');
+        const g = document.getElementById('q-ans');
         g.innerHTML = '';
         let opts = [ans];
         while(opts.length<4) { let r=Math.max(0, ans+Math.floor(Math.random()*5)-2); if(!opts.includes(r)) opts.push(r); }
         opts.sort(()=>Math.random()-0.5);
         
         opts.forEach(o => {
-            let btn=document.createElement('button'); btn.className='ans-btn'; btn.innerText=toAr(o);
+            let btn=document.createElement('button'); btn.className='ans-btn'; btn.innerText=ar(o);
             btn.onclick = () => {
                 if(o===ans) {
                     clearInterval(this.timer);
                     document.getElementById('quiz-screen').classList.remove('active');
-                    state = 'PLAYING';
-                    // العودة لنقطة آمنة
-                    Player.x = safeSpot.x;
-                    Player.y = safeSpot.y;
-                    Player.vx = 0; Player.vy = 0;
-                    lastTime = performance.now();
-                    requestAnimationFrame(loop);
+                    Player.x = Game.safeSpot.x;
+                    Player.y = Game.safeSpot.y;
+                    Player.vx=0; Player.vy=0;
+                    Game.running = true;
+                    Game.lastT = performance.now();
+                    loop();
                 } else btn.style.background='#555';
             };
             g.appendChild(btn);
         });
         
-        let t=30;
-        const bar=document.getElementById('timer-val');
+        let t = 30;
         if(this.timer) clearInterval(this.timer);
         this.timer = setInterval(()=>{
-            t--; bar.style.width = (t/30)*100 + '%';
+            t--;
+            document.getElementById('timer-fill').style.width = (t/30)*100+'%';
             if(t<=0) location.reload();
         }, 1000);
     }
 };
 
-function playSound(type) {
-    if(!audioCtx) return;
-    try {
-        const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
-        o.connect(g); g.connect(audioCtx.destination);
-        const t=audioCtx.currentTime;
-        if(type==='jump'){ o.frequency.setValueAtTime(200,t); o.frequency.linearRampToValueAtTime(400,t+0.1); g.gain.setValueAtTime(0.1,t); o.start(t); o.stop(t+0.1); }
-        if(type==='coin'){ o.frequency.setValueAtTime(900,t); g.gain.setValueAtTime(0.1,t); o.start(t); o.stop(t+0.1); }
-        if(type==='break'){ o.type='sawtooth'; o.frequency.setValueAtTime(100,t); g.gain.setValueAtTime(0.1,t); o.start(t); o.stop(t+0.1); }
-        if(type==='stomp'){ o.type='sawtooth'; o.frequency.setValueAtTime(200,t); g.gain.setValueAtTime(0.1,t); o.start(t); o.stop(t+0.1); }
-    } catch(e){}
+function bind(id, k) {
+    const e = document.getElementById(id);
+    e.addEventListener('touchstart', ev=>{ ev.preventDefault(); Inputs[k]=true; });
+    e.addEventListener('touchend', ev=>{ ev.preventDefault(); Inputs[k]=false; });
+    e.addEventListener('mousedown', ev=>{ ev.preventDefault(); Inputs[k]=true; });
+    e.addEventListener('mouseup', ev=>{ ev.preventDefault(); Inputs[k]=false; });
 }
+bind('btn-left', 'left');
+bind('btn-right', 'right');
+bind('btn-jump', 'jump');
+
+window.addEventListener('keydown', e=>{
+    if(e.code==='ArrowRight') Inputs.right=true;
+    if(e.code==='ArrowLeft') Inputs.left=true;
+    if(e.code==='Space') Inputs.jump=true;
+});
+window.addEventListener('keyup', e=>{
+    if(e.code==='ArrowRight') Inputs.right=false;
+    if(e.code==='ArrowLeft') Inputs.left=false;
+    if(e.code==='Space') Inputs.jump=false;
+});
 </script>
 </body>
 </html>
