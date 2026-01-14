@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>سوبر بطل المعرفة - V14</title>
+    <title>سوبر بطل المعرفة - V15</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Press+Start+2P&display=swap');
         
@@ -21,7 +21,7 @@
             position: relative;
             width: 100%; max-width: 800px;
             aspect-ratio: 16/10;
-            background: #5C94FC; /* لون السماء */
+            background: #5C94FC;
             border: 4px solid #fff;
             box-shadow: 0 0 40px rgba(0,0,0,0.8);
             overflow: hidden;
@@ -29,7 +29,6 @@
 
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
-        /* واجهة اللعبة */
         #ui-layer {
             position: absolute; top: 10px; left: 10px; right: 10px;
             display: flex; justify-content: space-between;
@@ -38,7 +37,6 @@
             pointer-events: none; z-index: 10; direction: ltr;
         }
 
-        /* الشاشات */
         .overlay {
             position: absolute; inset: 0; background: rgba(0,0,0,0.92);
             display: none; flex-direction: column; 
@@ -57,7 +55,6 @@
         }
         .btn-play:active { transform: translateY(4px); box-shadow: 0 2px 0 #006600; }
 
-        /* نافذة السؤال */
         .quiz-modal {
             background: #6b8cff; border: 4px solid white; padding: 20px;
             border-radius: 15px; width: 90%; max-width: 450px;
@@ -76,7 +73,6 @@
         .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .ans-btn { background: #fc0; border: 3px solid #000; padding: 12px; font-size: 24px; font-weight: bold; border-radius: 10px; font-family: 'Cairo'; cursor: pointer; }
 
-        /* تحكم الجوال */
         #controls {
             position: absolute; bottom: 20px; left: 20px; right: 20px;
             display: none; justify-content: space-between; z-index: 50;
@@ -143,7 +139,7 @@
 <div class="footer">جميع الحقوق محفوظة لـ سلمان الجنيدي</div>
 
 <script>
-// === 1. إعداد المحرك ===
+// === 1. المحرك ===
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const WIDTH = 256;
@@ -158,11 +154,14 @@ let score = 0;
 let coins = 0;
 let inputs = { left:false, right:false, jump:false };
 let audioCtx = null;
+let safeSpot = {x: 50, y: 100}; // نقطة الأمان للحفظ
 
-// === 2. نظام الرسومات (Pixel Art) ===
+// === 2. الرسومات (ألوان ماريو الأصلية) ===
 const Pal = {
     r:'#D00', s:'#FB8', b:'#00A', w:'#FFF', 
-    o:'#FA0', k:'#740', g:'#0A0', d:'#050', y:'#FFD700', z:'#000'
+    o:'#E79C21', k:'#943E00', // K: بني غامق للأرضية
+    l:'#D88820', // L: برتقالي للأرضية
+    g:'#00A800', d:'#005000', y:'#FFD700', z:'#000'
 };
 
 function makeSprite(art) {
@@ -187,10 +186,10 @@ const GFX = {
         "__bbwwwwwwwbb___","___bbb___bbb____","__kkkk___kkkk___","_kkkkk___kkkkk__"
     ]),
     brick: makeSprite([
-        "kkkkkkkkkkkkkkkk","kooookoooooooook","kooookoooooooook","kkkkkkkkkkkkkkkk",
-        "kooooooookokoook","kooooooookokoook","kkkkkkkkkkkkkkkk","koookooooooooook",
-        "koookooooooooook","kkkkkkkkkkkkkkkk","kooookoooooooook","kooookoooooooook",
-        "kkkkkkkkkkkkkkkk","kooooooookokoook","kooooooookokoook","kkkkkkkkkkkkkkkk"
+        "kkkkkkkkkkkkkkkk","kllllklllllllllko","kllllklllllllllko","kkkkkkkkkkkkkkkk",
+        "kllllllllklklllko","kllllllllklklllko","kkkkkkkkkkkkkkkk","klllkllllllllllko",
+        "klllkllllllllllko","kkkkkkkkkkkkkkkk","kllllklllllllllko","kllllklllllllllko",
+        "kkkkkkkkkkkkkkkk","kllllllllklklllko","kllllllllklklllko","kkkkkkkkkkkkkkkk"
     ]),
     qblock: makeSprite([
         "kkkkkkkkkkkkkkkk","koooooooooooookz","koykkkkkkkkkyokz","koykyyooooykyokz",
@@ -198,11 +197,12 @@ const GFX = {
         "koyyyyyyykykyokz","koyyyyyyykykyokz","koyyyyyyyyyyyokz","koyyyyyyykykyokz",
         "koyyyyyyykykyokz","koyyyyyyyyyyyokz","kzzzzzzzzzzzzzzz","kkkkkkkkkkkkkkkk"
     ]),
+    // أرضية ماريو الأصلية (بني غامق وفاتح)
     ground: makeSprite([
-        "oooooooooooooooo","okkkkkkkkkkkkkko","okooooooooooooko","okokkkkkkkkkkoko",
-        "okokkoooooookkoko","okokkoooooookkoko","okokkoooooookkoko","okokkoooooookkoko",
-        "okokkkkkkkkkkoko","okooooooooooooko","okkkkkkkkkkkkkko","oooooooooooooooo",
-        "oooooooooooooooo","oooooooooooooooo","oooooooooooooooo","oooooooooooooooo"
+        "lkkkkkkkkkkkkkkl","kllllllllllllllk","kllllllllllllllk","kllllllllllllllk",
+        "kllkkkkkkkkkkllk","kllkllllllllkllk","kllkllllllllkllk","kllkllllllllkllk",
+        "kllkkkkkkkkkkllk","kllkllllllllkllk","kllkllllllllkllk","kllkllllllllkllk",
+        "kllkkkkkkkkkkllk","kllllllllllllllk","lkkkkkkkkkkkkkkl","llllllllllllllll"
     ]),
     pipe: makeSprite([
         "gggggggggggggggg","gzzzzzzzzzzzzzzg","gzzggggggggggzzg","gzzggggggggggzzg",
@@ -218,7 +218,7 @@ const GFX = {
     ])
 };
 
-// === 3. بناء المرحلة (برمجياً لضمان عدم وجود فجوات) ===
+// === 3. بناء المرحلة (الذكي) ===
 let tiles = [];
 let enemies = [];
 
@@ -226,43 +226,71 @@ function generateLevel(idx) {
     tiles = [];
     enemies = [];
     const groundY = HEIGHT - 32;
-    const length = 200 + (idx * 50); // طول المرحلة يزيد مع كل مستوى
+    const length = 220 + (idx * 50); 
     
-    // 1. بناء الأرضية الأساسية (بدون فجوات أولاً)
+    let isHoleSequence = 0; // لعد الفراغات المتتالية
+
     for(let i=0; i<length; i++) {
-        // نضع حفرة كل مسافة معينة، لكن ليس في البداية
-        let isHole = (i > 20 && i % 40 > 35);
-        
+        let isHole = false;
+
+        // شروط الحفر: ليس في البداية، ليس في النهاية، وليس بعد حفرة مباشرة (إلا إذا نبي حفرة عريضة)
+        // لكن الأهم: التأكد من وجود "مهبط" بعد الحفرة
+        if (i > 20 && i < length - 30) {
+            // احتمال حفرة، بشرط أن الـ 3 بلوكات السابقة لم تكن حفرة (لتجنب الحفر المستحيلة)
+            if (isHoleSequence === 0 && Math.random() < 0.1) {
+                isHole = true;
+                isHoleSequence = 2; // الحفرة عرضها بلوكتين دائماً
+            } else if (isHoleSequence > 0) {
+                isHole = true;
+                isHoleSequence--;
+            }
+        }
+
+        // بناء الأرضية
         if(!isHole) {
             tiles.push({x:i*16, y:groundY, t:'ground'});
             tiles.push({x:i*16, y:groundY+16, t:'ground'});
+        } else {
+            // إذا كان حفرة، نضمن أن الـ 4 بلوكات التالية أرضية مستوية خالية من العوائق
+            // يتم التعامل معها في حلقة الكائنات بالأسفل
         }
     }
     
-    // 2. إضافة العناصر (طوب، صناديق، أعداء)
-    for(let i=10; i<length-10; i+=5) {
-        if(Math.random() < 0.3) {
-            // طوب وصناديق
-            let h = (Math.random() > 0.5) ? 48 : 80; // ارتفاعين مختلفين
-            let type = (Math.random() > 0.3) ? 'brick' : 'qblock';
-            tiles.push({x:i*16, y:groundY-h, t:type, oy:groundY-h});
+    // وضع الكائنات (طوب، أنابيب، أعداء)
+    // نبدأ من 15 عشان نعطي مساحة للبدء
+    for(let i=15; i<length-15; i++) {
+        // تحقق: هل تحتنا أرضية؟
+        let hasGround = tiles.some(t => t.x === i*16 && t.y === groundY);
+        // تحقق: هل البلوكات السابقة كانت حفرة؟ (عشان ما نحط عائق فوراً بعد القفزة)
+        let prevWasHole = !tiles.some(t => t.x === (i-1)*16 && t.y === groundY);
+        let prevPrevWasHole = !tiles.some(t => t.x === (i-2)*16 && t.y === groundY);
+
+        if (hasGround && !prevWasHole && !prevPrevWasHole) {
             
-            // عدو
-            if(Math.random() < 0.4) {
-                enemies.push({x:i*16, y:groundY-16, w:16, h:16, vx:-30, vy:0, dead:false});
+            // أنابيب (بشرط عدم وجود طوب فوقها)
+            if (i % 25 === 0 && Math.random() < 0.8) {
+                let h = (Math.random()>0.5)?32:48;
+                for(let py=0; py<h; py+=16) {
+                    tiles.push({x:i*16, y:groundY-py-16, t:'pipe'});
+                }
+                continue; // إذا حطينا أنبوب، ننتقل للي بعده
             }
-        }
-        
-        // أنابيب
-        if(i % 20 === 0) {
-            let ph = (Math.random()>0.5)?32:48;
-            for(let py=0; py<ph; py+=16) {
-                tiles.push({x:i*16, y:groundY-py-16, t:'pipe'});
+
+            // طوب وصناديق
+            if (i % 4 === 0 && Math.random() < 0.4) {
+                let h = (Math.random() > 0.5) ? 48 : 80; 
+                let type = (Math.random() > 0.3) ? 'brick' : 'qblock';
+                tiles.push({x:i*16, y:groundY-h, t:type, oy:groundY-h});
+                
+                // عدو (فقط على الأرض وتحت الطوب أحياناً)
+                if(Math.random() < 0.3) {
+                    enemies.push({x:i*16, y:groundY-16, w:16, h:16, vx:-30, vy:0, dead:false});
+                }
             }
         }
     }
     
-    // 3. علم النهاية
+    // علم النهاية
     tiles.push({x:(length-5)*16, y:groundY-16, t:'flag'});
     tiles.push({x:(length-5)*16, y:groundY-32, t:'flag'});
     tiles.push({x:(length-5)*16, y:groundY-48, t:'flag'});
@@ -270,6 +298,7 @@ function generateLevel(idx) {
     // إعادة تعيين اللاعب
     Player.x = 50; Player.y = 100; Player.vx=0; Player.vy=0;
     cameraX = 0;
+    safeSpot = {x: 50, y: 100};
 }
 
 // === 4. كائن اللاعب ===
@@ -280,7 +309,6 @@ const Player = {
     grounded: false, dir: 1,
     
     update: function(dt) {
-        // حركة
         if(inputs.right) { this.vx = this.speed; this.dir = 1; }
         else if(inputs.left) { this.vx = -this.speed; this.dir = -1; }
         else { this.vx = 0; }
@@ -288,7 +316,6 @@ const Player = {
         this.x += this.vx * dt;
         this.collide(true);
         
-        // قفز
         if(inputs.jump && this.grounded) {
             this.vy = -this.jumpForce;
             this.grounded = false;
@@ -300,6 +327,12 @@ const Player = {
         this.grounded = false;
         this.collide(false);
         
+        // تحديث نقطة الأمان عند الوقوف على الأرض
+        if(this.grounded) {
+            safeSpot.x = this.x;
+            safeSpot.y = this.y - 20; // نخزن المكان فوق الأرض بشوي
+        }
+
         // حدود
         if(this.y > HEIGHT + 50) die();
         if(this.x < cameraX) this.x = cameraX;
@@ -313,7 +346,7 @@ const Player = {
         let lastTile = tiles[tiles.length-1];
         if(lastTile && this.x > lastTile.x - 50) {
             score += 1000;
-            generateLevel(1); // إعادة توليد مستوى جديد
+            generateLevel(1); 
         }
     },
     
@@ -372,7 +405,6 @@ function loop() {
             e.x += e.vx * dt;
             e.y += 500 * dt;
             
-            // أرضية العدو
             let onG = false;
             for(let t of tiles) {
                 if(t.t==='flag') continue;
@@ -382,7 +414,6 @@ function loop() {
                 }
             }
             
-            // تصادم
             if(rectIntersect(Player, e)) {
                 if(Player.vy > 0 && Player.y < e.y + 8) {
                     e.dead = true;
@@ -399,9 +430,8 @@ function loop() {
     
     draw();
     
-    // UI
-    document.getElementById('score').innerText = score.toString().padStart(6,'0');
-    document.getElementById('coins').innerText = 'x' + coins.toString().padStart(2,'0');
+    document.getElementById('ui-score').innerText = score.toString().padStart(6,'0');
+    document.getElementById('ui-coins').innerText = 'x' + coins.toString().padStart(2,'0');
     
     requestAnimationFrame(loop);
 }
@@ -482,7 +512,7 @@ window.addEventListener('keyup', e => {
     if(e.code==='Space'||e.code==='ArrowUp') inputs.jump=false;
 });
 
-// === 7. الأسئلة ===
+// === 7. الأسئلة والإنقاذ ===
 const Quiz = {
     timer: null,
     init: function() {
@@ -518,8 +548,10 @@ const Quiz = {
                     clearInterval(this.timer);
                     document.getElementById('quiz-screen').classList.remove('active');
                     state = 'PLAYING';
-                    Player.y = 0; Player.vy = 0; 
-                    Player.x = Math.max(50, Player.x-30);
+                    // استرجاع المكان الآمن
+                    Player.x = safeSpot.x;
+                    Player.y = safeSpot.y;
+                    Player.vx = 0; Player.vy = 0;
                     lastTime = performance.now();
                     loop();
                 } else btn.style.background='#555';
