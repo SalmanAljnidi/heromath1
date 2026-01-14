@@ -1,0 +1,21 @@
+{
+  "name": "طريق المغامرة",
+  "short_name": "طريق المغامرة",
+  "start_url": "./index.html?v=addsub2",
+  "display": "standalone",
+  "background_color": "#071024",
+  "theme_color": "#071024",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/icons/app-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/app-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
