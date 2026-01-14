@@ -1,71 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>بطل المعرفة - المغامرة التعليمية</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-    <div class="game-container">
-        <div class="hud">
-            <div class="hud-item">
-                <span class="label">المرحلة</span>
-                <span class="value" id="uiLevel">1</span>
-            </div>
-            <div class="hud-item">
-                <span class="label">النقاط</span>
-                <span class="value" id="uiScore">0</span>
-            </div>
-            <div class="hud-item user-badge">
-                <span class="avatar">👤</span>
-                <span class="value" id="uiPlayer">اللاعب</span>
-            </div>
-        </div>
-
-        <canvas id="gameCanvas"></canvas>
-
-        <div class="mobile-controls">
-            <div class="d-pad">
-                <button id="btnLeft">⬅️</button>
-                <button id="btnRight">➡️</button>
-            </div>
-            <button id="btnJump" class="action-btn">قفز 🦘</button>
-        </div>
-
-        <div id="startScreen" class="overlay active">
-            <div class="modal">
-                <h1>🎮 بطل المعرفة</h1>
-                <p>اجمع العملات، تجنب الوحوش، وحل المسائل!</p>
-                
-                <div class="input-group">
-                    <input type="text" id="nameInput" placeholder="اكتب اسمك هنا يا بطل" maxlength="15">
-                </div>
-                
-                <button id="btnStartGame" class="btn-primary">انطلق للمغامرة!</button>
-                
-                <div class="footer-note">
-                    برمجة: <b>سلمان الجنيدي</b>
-                </div>
-            </div>
-        </div>
-
-        <div id="quizScreen" class="overlay">
-            <div class="modal quiz-modal">
-                <div class="quiz-header">
-                    <span class="timer" id="quizTimer">20</span>
-                    <h2>فرصة للعودة! 🧠</h2>
-                </div>
-                <div class="question-box">
-                    <p id="quizQuestion">5 + 3 = ؟</p>
-                </div>
-                <div class="options-grid" id="quizOptions">
-                    </div>
-            </div>
-        </div>
-    </div>
-
-    <script type="module" src="main.js"></script>
-</body>
-</html>
