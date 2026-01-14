@@ -3,39 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>سوبر بطل المعرفة</title>
+    <title>سوبر بطل المعرفة - النسخة المحسنة</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="game-container">
+    <div id="game-wrap">
         <div id="hud">
-            <div class="hud-box">النقاط <br><span id="score">0000</span></div>
-            <div class="hud-box">العملات <br><span id="coins">x00</span></div>
-            <div class="hud-box">المرحلة <br><span id="level">1-1</span></div>
-            <div class="hud-box">الوقت <br><span id="time">000</span></div>
+            <div>ماريو<br><span id="score">000000</span></div>
+            <div>عملات<br><span id="coins">x00</span></div>
+            <div>عالم<br><span>1-1</span></div>
+            <div>وقت<br><span id="time">300</span></div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
 
-        <div id="start-screen" class="screen active">
+        <div id="start-screen" class="overlay active">
             <h1>سوبر بطل المعرفة</h1>
-            <p>اضغط للبدء</p>
+            <p>- اضغط للبدء -</p>
+            <small>تحكم بالأسهم والمسافة</small>
         </div>
 
-        <div id="quiz-screen" class="screen">
-            <div class="quiz-box">
-                <h2>أنقذ البطل! 🍄</h2>
-                <div class="timer-bar"><div id="timer-fill"></div></div>
+        <div id="quiz-screen" class="overlay">
+            <div class="quiz-modal">
+                <div class="quiz-header">
+                    <h2>فرصة للنجاة! 🍄</h2>
+                    <div class="timer-bar"><div id="timer-fill"></div></div>
+                </div>
                 
-                <div class="question-area">
-                    <div class="visual-math" id="q-visual">
-                        </div>
-                    <div class="math-text" id="q-text">5 + 3 = ؟</div>
+                <div class="math-display">
+                    <div id="visual-area" class="visual-dots"></div>
+                    <div id="question-text" class="q-text">5 + 3 = ؟</div>
                 </div>
 
-                <div class="answers-grid" id="answers-container">
-                    </div>
+                <div id="answers-grid" class="answers"></div>
             </div>
         </div>
 
