@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>سوبر بطل المعرفة - V11</title>
+    <title>سوبر بطل المعرفة</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Press+Start+2P&display=swap');
         
         body {
-            margin: 0; background: #000; color: white;
+            margin: 0; background: #111; color: white;
             font-family: 'Cairo', sans-serif;
             height: 100vh; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
@@ -21,8 +21,8 @@
             width: 100%; max-width: 800px;
             aspect-ratio: 16/10;
             background: #5C94FC;
-            border: 2px solid #fff;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            border: 4px solid #fff;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
             overflow: hidden;
         }
 
@@ -33,67 +33,66 @@
             position: absolute; top: 10px; left: 10px; right: 10px;
             display: flex; justify-content: space-between;
             font-family: 'Press Start 2P', monospace;
-            font-size: 14px; text-shadow: 2px 2px 0 #000;
+            font-size: 12px; text-shadow: 2px 2px 0 #000;
             pointer-events: none; z-index: 20; direction: ltr;
         }
 
-        /* Overlays */
+        /* Screens */
         .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
+            position: absolute; inset: 0; background: rgba(0,0,0,0.92);
             display: none; flex-direction: column; 
             align-items: center; justify-content: center; z-index: 100;
         }
         .overlay.active { display: flex; }
         
-        h1 { color: #ffce00; text-shadow: 3px 3px 0 #d32f2f; font-size: 28px; margin-bottom: 30px; text-align: center; }
+        h1 { color: #ffce00; text-shadow: 3px 3px 0 #d32f2f; font-size: 24px; margin-bottom: 20px; text-align: center; }
         
         button.start-btn {
-            background: #00AA00; color: white; border: 4px solid white;
-            padding: 20px 60px; font-size: 24px; cursor: pointer;
+            background: #00AA00; color: white; border: 3px solid white;
+            padding: 15px 40px; font-size: 20px; cursor: pointer;
             font-family: 'Cairo'; font-weight: bold; border-radius: 50px;
-            box-shadow: 0 8px 0 #006600; transition: transform 0.1s;
+            box-shadow: 0 6px 0 #006600; transition: transform 0.1s;
         }
-        button.start-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 #006600; }
+        button.start-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #006600; }
 
-        /* Quiz UI */
+        /* Quiz */
         .quiz-panel {
-            background: #6b8cff; border: 4px solid white; padding: 20px;
-            border-radius: 15px; width: 90%; max-width: 450px; text-align: center;
+            background: #6b8cff; border: 4px solid white; padding: 15px;
+            border-radius: 15px; width: 90%; max-width: 400px; text-align: center;
         }
-        .timer-bar { width: 100%; height: 10px; background: #222; margin-bottom: 15px; border-radius: 5px; overflow: hidden; }
+        .timer-bar { width: 100%; height: 10px; background: #222; margin-bottom: 10px; border-radius: 5px; overflow: hidden; }
         #timer-fill { width: 100%; height: 100%; background: #0f0; }
         
-        .dots { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 15px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
-        .dot { width: 24px; height: 24px; background: #f44; border-radius: 50%; border: 2px solid #fff; }
+        .dots { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 10px 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
+        .dot { width: 20px; height: 20px; background: #f44; border-radius: 50%; border: 2px solid #fff; }
         .dot.x { background: #555; opacity: 0.5; position: relative; }
-        .dot.x::after { content:'✖'; position: absolute; left:4px; top:-2px; color: white; font-weight: bold; }
+        .dot.x::after { content:'✖'; position: absolute; left:3px; top:-4px; color: white; font-weight: bold; font-size: 16px; }
         
-        .math-text { font-size: 30px; direction: ltr; margin: 15px 0; text-shadow: 2px 2px 0 #000; font-family: 'Press Start 2P'; }
+        .math-text { font-size: 24px; direction: ltr; margin: 10px 0; text-shadow: 2px 2px 0 #000; font-family: 'Press Start 2P'; }
         
         .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .ans-btn { background: #fc0; border: 3px solid #000; padding: 15px; font-size: 22px; font-weight: bold; border-radius: 8px; font-family: 'Cairo'; cursor: pointer; }
+        .ans-btn { background: #fc0; border: 3px solid #000; padding: 10px; font-size: 20px; font-weight: bold; border-radius: 8px; font-family: 'Cairo'; cursor: pointer; }
 
         /* Mobile Controls */
         #mobile-controls {
-            position: absolute; bottom: 20px; left: 20px; right: 20px;
+            position: absolute; bottom: 15px; left: 15px; right: 15px;
             display: none; justify-content: space-between; z-index: 150;
             pointer-events: none;
         }
         @media (hover: none) and (pointer: coarse) { #mobile-controls { display: flex; } }
         
-        .dpad-zone { display: flex; gap: 30px; pointer-events: auto; }
+        .dpad-zone { display: flex; gap: 20px; pointer-events: auto; }
         .action-zone { pointer-events: auto; }
         
         .ctrl-btn {
-            width: 80px; height: 80px; 
+            width: 70px; height: 70px; 
             background: rgba(255,255,255,0.2);
-            border: 3px solid rgba(255,255,255,0.6); 
+            border: 2px solid rgba(255,255,255,0.6); 
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 40px; color: white;
+            font-size: 30px; color: white;
             backdrop-filter: blur(4px);
-            touch-action: none;
-            user-select: none;
+            touch-action: none; user-select: none;
         }
         .ctrl-btn:active { background: rgba(255,255,255,0.5); transform: scale(0.95); }
         .btn-a { background: rgba(255, 60, 60, 0.3); border-color: rgba(255, 100, 100, 0.7); font-weight: 900; }
@@ -102,8 +101,6 @@
     </style>
 </head>
 <body>
-
-<script>window.onerror = function(msg, url, line) { alert("Error: " + msg + "\nLine: " + line); return false; };</script>
 
 <div id="game-frame">
     <canvas id="canvas"></canvas>
@@ -116,8 +113,8 @@
 
     <div id="start-screen" class="overlay active">
         <h1>سوبر بطل المعرفة</h1>
-        <p style="margin-bottom:30px; font-size:16px;">اضغط للبدء</p>
-        <button class="start-btn" onclick="startGame()">ابدأ اللعب ▶</button>
+        <p style="margin-bottom:20px; font-size:14px;">اضغط للبدء</p>
+        <button class="start-btn" id="start-btn-real">ابدأ اللعب ▶</button>
     </div>
 
     <div id="quiz-screen" class="overlay">
@@ -132,11 +129,11 @@
 
     <div id="mobile-controls">
         <div class="dpad-zone">
-            <div class="ctrl-btn" ontouchstart="setInput('left',true)" ontouchend="setInput('left',false)" onmousedown="setInput('left',true)" onmouseup="setInput('left',false)">◀</div>
-            <div class="ctrl-btn" ontouchstart="setInput('right',true)" ontouchend="setInput('right',false)" onmousedown="setInput('right',true)" onmouseup="setInput('right',false)">▶</div>
+            <div class="ctrl-btn" id="btn-left">◀</div>
+            <div class="ctrl-btn" id="btn-right">▶</div>
         </div>
         <div class="action-zone">
-            <div class="ctrl-btn btn-a" ontouchstart="setInput('jump',true)" ontouchend="setInput('jump',false)" onmousedown="setInput('jump',true)" onmouseup="setInput('jump',false)">A</div>
+            <div class="ctrl-btn btn-a" id="btn-jump">A</div>
         </div>
     </div>
 </div>
@@ -154,13 +151,10 @@ canvas.height = HEIGHT;
 
 // === Globals ===
 let state = 'MENU';
-let animationId;
-let lastTime = 0;
 let inputs = { left:false, right:false, jump:false };
 let audioCtx = null;
 
-// === Graphics System (Fixed) ===
-// Added 'Y' for Yellow to fix qblock
+// === Graphics System ===
 const Pal = {R:'#D00', S:'#FB8', B:'#00A', W:'#FFF', O:'#FA0', K:'#740', G:'#0A0', Z:'#000', Y:'#FFD700'};
 
 function sprite(d) {
@@ -169,6 +163,7 @@ function sprite(d) {
     return c;
 }
 
+// *** تم إصلاح الخطأ هنا: جميع المصفوفات 16 سطر ***
 const GFX = {
     mario: sprite([
         "_____RRRRR______",
@@ -207,7 +202,6 @@ const GFX = {
         "KKKKKKKKKKKKKKKK"
     ]),
     qblock: sprite([
-        // Fixed: Now has exactly 16 rows
         "KKKKKKKKKKKKKKKK",
         "KOOOOOOOOOOOOOKZ",
         "KOYKKKKKKKKKYOKZ",
@@ -223,7 +217,7 @@ const GFX = {
         "KOYYYYYYYKYKYOKZ",
         "KOYYYYYYYYYYYOKZ",
         "KZZZZZZZZZZZZZZZ",
-        "KKKKKKKKKKKKKKKK" // Added missing row
+        "KKKKKKKKKKKKKKKK" 
     ]),
     ground: sprite([
         "OOOOOOOOOOOOOOOO",
@@ -435,12 +429,12 @@ const Player = {
     }
 };
 
-// === Start Function ===
+// === Functions ===
 function startGame() {
     try {
         if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if(audioCtx.state === 'suspended') audioCtx.resume();
-    } catch(e) { console.log("Audio failed"); }
+    } catch(e) {}
 
     document.getElementById('start-screen').classList.remove('active');
     Game.initLevel();
@@ -455,7 +449,6 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
-// === Audio ===
 function playSound(type) {
     if(!audioCtx) return;
     try {
@@ -468,10 +461,19 @@ function playSound(type) {
     } catch(e){}
 }
 
-// === Input Helpers ===
-window.setInput = function(key, val) {
-    inputs[key] = val;
-};
+// === Inputs ===
+function bindBtn(id, key) {
+    const el = document.getElementById(id);
+    el.addEventListener('touchstart', (e)=>{ e.preventDefault(); inputs[key]=true; });
+    el.addEventListener('touchend', (e)=>{ e.preventDefault(); inputs[key]=false; });
+    el.addEventListener('mousedown', (e)=>{ e.preventDefault(); inputs[key]=true; });
+    el.addEventListener('mouseup', (e)=>{ e.preventDefault(); inputs[key]=false; });
+}
+bindBtn('btn-left', 'left');
+bindBtn('btn-right', 'right');
+bindBtn('btn-jump', 'jump');
+
+document.getElementById('start-btn-real').addEventListener('click', startGame);
 
 window.addEventListener('keydown', e => {
     if(e.code==='ArrowRight') inputs.right=true;
