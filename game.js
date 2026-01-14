@@ -1,293 +1,328 @@
-// إعدادات اللعبة
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// ضبط الحجم ليناسب دقة "ريترو"
-const GAME_WIDTH = 400; // دقة داخلية منخفضة لتعطي شكل البكسل
-const GAME_HEIGHT = 225;
-canvas.width = GAME_WIDTH;
-canvas.height = GAME_HEIGHT;
+// دقة NES تقريباً
+const WIDTH = 256;
+const HEIGHT = 240;
+canvas.width = WIDTH;
+canvas.height = HEIGHT;
 
-// متغيرات عامة
-let gameRunning = false;
-let frames = 0;
-let score = 0;
-let coins = 0;
-let timeLeft = 300;
-
-// المدخلات
-const keys = { right: false, left: false, up: false };
-
-// نقطة الأمان (عشان لو طاح يرجع هنا)
-let safeSpot = { x: 50, y: 0 };
-
-// ========================
-// 1. نظام الرسومات (SPRITES)
-// ========================
-// بدال الصور، بنرسم البكسل بالكود عشان نضمن انها تشتغل عند الجميع
-const drawPixelSprite = (ctx, type, x, y, dir = 1) => {
-    ctx.save();
-    if(dir === -1) {
-        ctx.translate(x + 16, y);
-        ctx.scale(-1, 1);
-        x = 0; // Reset x relative to translation
-    } else {
-        ctx.translate(x, y);
-    }
-
-    if(type === 'hero') {
-        // قبعة حمراء
-        ctx.fillStyle = '#f00'; ctx.fillRect(0,0,16,4); ctx.fillRect(4,-2,8,2);
-        // وجه
-        ctx.fillStyle = '#fc9'; ctx.fillRect(2,4,10,6);
-        // شنب
-        ctx.fillStyle = '#000'; ctx.fillRect(8,7,4,2);
-        // جسم ازرق
-        ctx.fillStyle = '#00f'; ctx.fillRect(3,10,10,6);
-        // اذرع حمراء
-        ctx.fillStyle = '#f00'; ctx.fillRect(0,10,3,6); ctx.fillRect(13,10,3,6);
-    } else if(type === 'goomba') { // الفطر الشرير
-        ctx.fillStyle = '#8B4513'; // بني
-        ctx.beginPath(); ctx.arc(8, 8, 7, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#000'; // عيون
-        ctx.fillRect(4,5,2,4); ctx.fillRect(10,5,2,4);
-        ctx.fillStyle = '#fc9'; // قدم
-        if(Math.floor(Date.now()/200)%2===0) {
-            ctx.fillRect(1,12,4,3); ctx.fillRect(11,12,4,3);
-        } else {
-            ctx.fillRect(3,12,4,3); ctx.fillRect(9,12,4,3);
-        }
-    } else if(type === 'brick') {
-        ctx.fillStyle = '#B22222'; ctx.fillRect(0,0,16,16);
-        ctx.fillStyle = '#000'; ctx.fillRect(0,0,16,1); ctx.fillRect(0,8,16,1);
-        ctx.fillRect(8,0,1,8); ctx.fillRect(4,8,1,8); ctx.fillRect(12,8,1,8);
-    } else if(type === 'qblock') {
-        ctx.fillStyle = '#FFD700'; ctx.fillRect(0,0,16,16);
-        ctx.fillStyle = '#000'; ctx.font='10px monospace'; ctx.fillText('?', 5, 12);
-        ctx.strokeRect(1,1,14,14);
-    } else if(type === 'ground') {
-        ctx.fillStyle = '#8B4513'; ctx.fillRect(0,0,16,16);
-        ctx.fillStyle = '#CD853F'; ctx.fillRect(2,2,12,10);
-    } else if(type === 'coin') {
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath(); ctx.ellipse(8, 8, 5, 7, 0, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.restore();
+// === 1. مكتبة الرسومات (Sprite Atlas) ===
+// 0: شفاف, 1: أحمر/بني, 2: بيج/وجه, 3: أزرق/أسود
+// رسمت لك ماريو بيدي هنا بكسل بكسل
+const SPRITES = {
+    marioIdle: [
+        "000001111100000",
+        "000011111111100",
+        "000033322320000",
+        "000323222322200",
+        "000322333322200",
+        "000332222223300",
+        "000002222222000",
+        "000011311100000",
+        "000111311311100",
+        "001111333311110",
+        "002213333331220",
+        "002223333332220",
+        "002233333333220",
+        "000033300333000",
+        "000333000033300",
+        "003333000033330"
+    ],
+    marioRun: [
+        "000001111100000",
+        "000011111111100",
+        "000033322320000",
+        "000323222322200",
+        "000322333322200",
+        "000332222223300",
+        "000002222222000",
+        "000011311310000",
+        "000111311311100",
+        "001111333311110",
+        "002213333331220",
+        "002223333332220",
+        "000333333333300",
+        "003333000033330",
+        "033300000000333",
+        "033000000000033"
+    ],
+    goomba: [ // الفطر الشرير
+        "0000001111000000",
+        "0000111111110000",
+        "0001111111111000",
+        "0011111111111100",
+        "0011131111311100",
+        "0111333113331110",
+        "0111333113331110",
+        "0111111111111110",
+        "0112222222222110",
+        "0122222222222210",
+        "0022222222222200",
+        "0002222222222000",
+        "0000033003300000",
+        "0000333003330000",
+        "0000333003330000"
+    ],
+    brick: [ // الطوب
+        "1111111111111111",
+        "1222212222222221",
+        "1222212222222221",
+        "1222212222222221",
+        "1111111111111111",
+        "1222222222122221",
+        "1222222222122221",
+        "1222222222122221",
+        "1111111111111111",
+        "1222212222222221",
+        "1222212222222221",
+        "1222212222222221",
+        "1111111111111111",
+        "1222222222122221",
+        "1222222222122221",
+        "1111111111111111"
+    ],
+    qblock: [ // علامة الاستفهام
+        "1111111111111111",
+        "1222222222222223",
+        "1223333333333223",
+        "1233222222233223",
+        "1233223332233223",
+        "1233223332233223",
+        "1233222233333223",
+        "1233333333222223",
+        "1222222332222223",
+        "1222222332222223",
+        "1222222222222223",
+        "1222222332222223",
+        "1222222332222223",
+        "1222222222222223",
+        "1222222222222223",
+        "1333333333333333"
+    ]
 };
 
-// ========================
-// 2. كائنات اللعبة
-// ========================
-class Player {
-    constructor() {
-        this.x = 50; this.y = 100;
-        this.w = 16; this.h = 16;
-        this.vx = 0; this.vy = 0;
-        this.speed = 2.5; // سرعة مناسبة لمقاس اللعبة
-        this.jumpPower = -6.5;
-        this.grounded = false;
-        this.facing = 1;
-        this.dead = false;
-    }
-    update() {
-        if(this.dead) return;
+// الألوان لكل كائن
+const PALETTES = {
+    mario: { 1: '#E70000', 2: '#FFCC99', 3: '#0000E7' }, // أحمر، بشرة، أزرق
+    goomba: { 1: '#AA5500', 2: '#FFCC99', 3: '#000000' }, // بني، بشرة، أسود
+    brick: { 1: '#CC6600', 2: '#FF9933' }, // طوب
+    qblock: { 1: '#000000', 2: '#FFCC00', 3: '#AA5500' } // ذهبي
+};
 
-        // الحركة
-        if (keys.right) { this.vx = this.speed; this.facing = 1; }
-        else if (keys.left) { this.vx = -this.speed; this.facing = -1; }
-        else { this.vx *= 0.8; } // احتكاك
+// دالة رسم البكسل (المحرك السحري)
+function drawSprite(ctx, key, paletteName, x, y, flip = false) {
+    const pixels = SPRITES[key];
+    const palette = PALETTES[paletteName];
+    if (!pixels) return;
 
-        if (keys.up && this.grounded) {
-            this.vy = this.jumpPower;
-            this.grounded = false;
-            playSound('jump');
-        }
-
-        this.vy += 0.3; // الجاذبية
-        this.x += this.vx;
-        this.y += this.vy;
-
-        this.checkCollisions();
-
-        // تحديث نقطة الأمان
-        if(this.grounded) {
-            safeSpot.x = this.x;
-            safeSpot.y = this.y - 10; // احفظه فوق الأرض بشوي
-        }
-
-        // الموت بالسقوط
-        if(this.y > GAME_HEIGHT) {
-            handleDeath();
-        }
-    }
-    checkCollisions() {
-        this.grounded = false;
-        // تصادم مع الأرضيات
-        level.tiles.forEach(tile => {
-            if(checkRect(this, tile)) {
-                // اصطدام من فوق (هبوط)
-                if(this.vy > 0 && this.y + this.h - this.vy <= tile.y) {
-                    this.y = tile.y - this.h;
-                    this.vy = 0;
-                    this.grounded = true;
-                }
-                // اصطدام بالرأس (طوب)
-                else if(this.vy < 0 && this.y - this.vy >= tile.y + tile.h) {
-                    this.y = tile.y + tile.h;
-                    this.vy = 0;
-                    if(tile.type === 'qblock' && !tile.used) {
-                        tile.used = true;
-                        tile.type = 'brick'; // يتحول لطوب عادي
-                        coins++;
-                        score += 100;
-                        playSound('coin');
-                        updateUI();
-                    }
-                }
-                // اصطدام جانبي
-                else if(this.vx > 0) { this.x = tile.x - this.w; this.vx = 0; }
-                else if(this.vx < 0) { this.x = tile.x + tile.w; this.vx = 0; }
-            }
-        });
-
-        // تصادم مع العملات
-        level.coins = level.coins.filter(c => {
-            if(checkRect(this, c)) {
-                coins++; score+=50; playSound('coin'); updateUI(); return false;
-            }
-            return true;
-        });
-
-        // تصادم مع الأعداء
-        level.enemies.forEach(e => {
-            if(e.dead) return;
-            if(checkRect(this, e)) {
-                // دعس العدو
-                if(this.vy > 0 && this.y + this.h - this.vy <= e.y + e.h * 0.5) {
-                    e.dead = true;
-                    this.vy = -3; // قفزة صغيرة
-                    score += 100;
-                    playSound('stomp');
-                    updateUI();
-                } else {
-                    handleDeath();
-                }
-            }
-        });
-    }
-    draw() {
-        if(this.dead) return;
-        drawPixelSprite(ctx, 'hero', this.x, this.y, this.facing);
-    }
-}
-
-class Enemy {
-    constructor(x, y) {
-        this.x = x; this.y = y;
-        this.w = 16; this.h = 16;
-        this.dir = -1;
-        this.dead = false;
-    }
-    update() {
-        if(this.dead) return;
-        this.x += this.dir * 0.8;
-        
-        // جاذبية بسيطة
-        let onGround = false;
-        level.tiles.forEach(t => {
-            if(this.x < t.x + t.w && this.x + this.w > t.x && this.y + this.h + 1 > t.y && this.y < t.y + t.h) {
-                onGround = true;
-            }
-            // اصطدام بالجدار يعكس الاتجاه
-            if(checkRect(this, t)) {
-                this.dir *= -1;
-                this.x += this.dir * 2;
-            }
-        });
-        if(!onGround) this.y += 2;
-    }
-    draw() {
-        if(this.dead) return;
-        drawPixelSprite(ctx, 'goomba', this.x, this.y, 1);
-    }
-}
-
-// ========================
-// 3. بناء المرحلة
-// ========================
-const level = { tiles: [], coins: [], enemies: [] };
-
-function initLevel() {
-    level.tiles = []; level.coins = []; level.enemies = [];
-    
-    // الأرضية
-    for(let i=0; i<100; i++) {
-        // حفر (بدون أرضية)
-        if(i !== 15 && i !== 16 && i !== 40 && i !== 41) {
-            level.tiles.push({x: i*16, y: GAME_HEIGHT-16, w:16, h:16, type:'ground'});
-            level.tiles.push({x: i*16, y: GAME_HEIGHT, w:16, h:16, type:'ground'});
-        }
-    }
-
-    // الطوب والمنصات
-    const addPlatform = (x, y, w) => {
-        for(let i=0; i<w; i++) level.tiles.push({x:(x+i)*16, y:y*16, w:16, h:16, type:'brick'});
-    };
-    const addQBlock = (x, y) => level.tiles.push({x:x*16, y:y*16, w:16, h:16, type:'qblock', used:false});
-
-    // تصميم المرحلة (مشابه للمرحلة 1-1)
-    addQBlock(8, 9);
-    addPlatform(12, 9, 3); addQBlock(13, 5);
-    addPlatform(20, 8, 2); 
-    addPlatform(28, 9, 5); addQBlock(30, 5);
-    addPlatform(45, 10, 3);
-    addPlatform(55, 7, 3);
-
-    // عملات
-    for(let i=0; i<10; i++) level.coins.push({x: (20+i*5)*16, y: 100, w:10, h:14});
-
-    // أعداء
-    level.enemies.push(new Enemy(200, 180));
-    level.enemies.push(new Enemy(400, 180));
-    level.enemies.push(new Enemy(600, 180));
-}
-
-let player = new Player();
-let cameraX = 0;
-
-// ========================
-// 4. المحرك الرئيسي
-// ========================
-function loop() {
-    if(!gameRunning) return;
-    
-    ctx.fillStyle = '#5c94fc'; // لون السماء
-    ctx.fillRect(0,0, canvas.width, canvas.height);
-
-    // الكاميرا
-    // خلي البطل في النص، لكن لا ترجع لليسار (مثل ماريو القديم)
-    let targetCam = player.x - GAME_WIDTH * 0.4;
-    if(targetCam > cameraX) cameraX = targetCam;
-    
     ctx.save();
-    ctx.translate(-Math.floor(cameraX), 0);
+    if (flip) {
+        ctx.translate(x + 16, y);
+        ctx.scale(-1, 1);
+        x = 0;
+        y = y;
+    } else {
+        ctx.translate(x, y);
+        x = 0; y = 0;
+    }
 
-    // رسم الأرضيات
-    level.tiles.forEach(t => drawPixelSprite(ctx, t.type, t.x, t.y));
-    
-    // رسم العملات
-    level.coins.forEach(c => drawPixelSprite(ctx, 'coin', c.x, c.y));
-
-    // تحديث ورسم الأعداء
-    level.enemies.forEach(e => { e.update(); e.draw(); });
-
-    // اللاعب
-    player.update();
-    player.draw();
-
+    const pixelSize = 1; 
+    for (let r = 0; r < pixels.length; r++) {
+        for (let c = 0; c < pixels[r].length; c++) {
+            const colorCode = pixels[r][c];
+            if (colorCode !== '0') {
+                ctx.fillStyle = palette[colorCode];
+                ctx.fillRect(x + c, y + r, 1, 1);
+            }
+        }
+    }
     ctx.restore();
+}
 
-    requestAnimationFrame(loop);
+// === 2. تصميم المرحلة (Tile Map) ===
+// M: أرضية, B: طوب, ?: سؤال, P: أنبوب, G: فطر شرير, #: فراغ
+// هذه الخريطة طويلة جداً (3 شاشات عرض)
+const LEVEL_MAP = [
+    "                                                                                                   ",
+    "                                                                                                   ",
+    "                                                                                                   ",
+    "                                                                                                   ",
+    "      ?                                                                                            ",
+    "                                          ???               B?B?B                                  ",
+    "                    ?  B?B  ?            B   B                                                     ",
+    "                                                                   G                               ",
+    "         G                         G               G             BBBB                              ",
+    "    B  BBBBB     BB?BB       BBBBBB    BBBBBBBBB       BB      BB    BB                            ",
+    "                                                    BB        BB      BB          F                ",
+    "             P           P                        BB         BB        BB         F                ",
+    "MMMMMMMMMMMMMMMM  MMMMMMMMMMMMMM  MMMM  MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+    "MMMMMMMMMMMMMMMM  MMMMMMMMMMMMMM  MMMM  MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+];
+
+const TILE_SIZE = 16;
+let tiles = [];
+let enemies = [];
+let levelWidth = 0;
+
+function parseLevel() {
+    tiles = []; enemies = [];
+    levelWidth = LEVEL_MAP[0].length * TILE_SIZE;
+    
+    for(let r=0; r<LEVEL_MAP.length; r++) {
+        for(let c=0; c<LEVEL_MAP[r].length; c++) {
+            const char = LEVEL_MAP[r][c];
+            const x = c * TILE_SIZE;
+            const y = r * TILE_SIZE + (HEIGHT - LEVEL_MAP.length * TILE_SIZE); // محاذاة للأسفل
+            
+            if(char === 'M') tiles.push({x, y, w:16, h:16, type:'ground'});
+            else if(char === 'B') tiles.push({x, y, w:16, h:16, type:'brick'});
+            else if(char === '?') tiles.push({x, y, w:16, h:16, type:'qblock', used:false});
+            else if(char === 'P') {
+                tiles.push({x, y, w:32, h:32, type:'pipe'}); // أنبوب بسيط
+            }
+            else if(char === 'G') enemies.push({x, y, w:16, h:16, dir:-1, dead:false, type:'goomba'});
+            else if(char === 'F') tiles.push({x, y, w:4, h:32, type:'flag'}); // علم النهاية
+        }
+    }
+}
+
+// === 3. فيزياء اللعبة ===
+const GRAVITY = 0.25;
+const FRICTION = 0.8;
+const MOVE_ACCEL = 0.5; // تسارع ناعم
+const JUMP_FORCE = -5.5;
+
+let player = {
+    x: 50, y: 100, w: 14, h: 16, // عرض أنحف شوي عشان يدخل بين المكعبات
+    vx: 0, vy: 0,
+    grounded: false,
+    facing: 1, // 1 يمين, -1 يسار
+    animTimer: 0,
+    dead: false
+};
+
+let camera = { x: 0 };
+let gameState = 'MENU'; // MENU, PLAYING, QUIZ
+let safeSpot = { x: 50, y: 0 }; // نقطة الأمان
+let score = 0;
+let coins = 0;
+
+// المدخلات
+const input = { left: false, right: false, jump: false };
+
+function update() {
+    if(gameState !== 'PLAYING') return;
+
+    // حركة اللاعب
+    if(input.right) { player.vx += MOVE_ACCEL; player.facing = 1; }
+    else if(input.left) { player.vx -= MOVE_ACCEL; player.facing = -1; }
+    else { player.vx *= FRICTION; }
+
+    // حد السرعة
+    player.vx = Math.max(Math.min(player.vx, 3), -3);
+
+    // القفز
+    if(input.jump && player.grounded) {
+        player.vy = JUMP_FORCE;
+        player.grounded = false;
+        playSound('jump');
+    }
+
+    // الجاذبية
+    player.vy += GRAVITY;
+
+    // تطبيق الحركة
+    player.x += player.vx;
+    checkCollisionX();
+    player.y += player.vy;
+    player.grounded = false;
+    checkCollisionY();
+
+    // انيميشن
+    if(Math.abs(player.vx) > 0.5) player.animTimer++;
+    else player.animTimer = 0;
+
+    // تحديث الأعداء
+    enemies.forEach(e => {
+        if(e.dead) return;
+        // حركة بسيطة
+        if(Math.abs(e.x - player.x) < WIDTH + 50) { // يتحرك فقط لو قريب
+            e.x += e.dir * 0.5;
+            e.y += GRAVITY; // يسقط
+            // تصادم العدو مع الأرض
+            let eGrounded = false;
+            tiles.forEach(t => {
+                if(checkRect(e, t)) {
+                     if(e.y + e.h - 4 <= t.y) { e.y = t.y - e.h; eGrounded = true; } // وقوف
+                     else { e.dir *= -1; } // اصطدام جدار
+                }
+            });
+        }
+        
+        // تصادم اللاعب مع العدو
+        if(checkRect(player, e)) {
+            if(player.vy > 0 && player.y + player.h - player.vy <= e.y + e.h*0.5) {
+                // دعس
+                e.dead = true;
+                player.vy = -3;
+                score += 100;
+                playSound('stomp');
+            } else {
+                die();
+            }
+        }
+    });
+
+    // تحديث نقطة الأمان (كل ما يوقف على أرض ثابتة)
+    if(player.grounded) {
+        safeSpot.x = player.x;
+        safeSpot.y = player.y - 10;
+    }
+
+    // الموت بالسقوط
+    if(player.y > HEIGHT + 20) die();
+
+    // الكاميرا تتبع اللاعب
+    let targetCam = player.x - WIDTH * 0.4;
+    targetCam = Math.max(0, Math.min(targetCam, levelWidth - WIDTH));
+    camera.x += (targetCam - camera.x) * 0.1;
+    
+    // الفوز
+    if(player.x > levelWidth - 50) {
+        alert("مبروك! فزت!");
+        initGame();
+    }
+}
+
+function checkCollisionX() {
+    tiles.forEach(t => {
+        if(checkRect(player, t)) {
+            if(player.vx > 0) player.x = t.x - player.w;
+            else if(player.vx < 0) player.x = t.x + t.w;
+            player.vx = 0;
+        }
+    });
+}
+
+function checkCollisionY() {
+    tiles.forEach(t => {
+        if(checkRect(player, t)) {
+            if(player.vy > 0) { // هبوط
+                player.y = t.y - player.h;
+                player.vy = 0;
+                player.grounded = true;
+            } else if(player.vy < 0) { // نطح
+                player.y = t.y + t.h;
+                player.vy = 0;
+                if(t.type === 'qblock' && !t.used) {
+                    t.used = true;
+                    t.type = 'brick'; // يتحول لطوب عادي
+                    coins++; score+=50; playSound('coin');
+                }
+            }
+        }
+    });
 }
 
 function checkRect(r1, r2) {
@@ -295,214 +330,226 @@ function checkRect(r1, r2) {
            r1.y < r2.y + r2.h && r1.y + r1.h > r2.y;
 }
 
-// ========================
-// 5. نظام الأسئلة (المنقذ)
-// ========================
-const quizScreen = document.getElementById('quiz-screen');
-let quizTimerVal = 30;
-let quizInterval;
+// === 4. الرسم ===
+function draw() {
+    // مسح الشاشة
+    ctx.fillStyle = '#5C94FC';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-function handleDeath() {
-    gameRunning = false;
-    player.dead = true;
+    ctx.save();
+    ctx.translate(-Math.floor(camera.x), 0);
+
+    // رسم البلاط
+    tiles.forEach(t => {
+        if(t.type === 'ground') {
+            ctx.fillStyle = '#C84C0C'; ctx.fillRect(t.x, t.y, 16, 16); // بسيط للأرض
+            ctx.fillStyle = '#000'; ctx.fillRect(t.x, t.y, 16, 1); // خط علوي
+        } else if(t.type === 'pipe') {
+             ctx.fillStyle = '#00E700'; ctx.fillRect(t.x, t.y, 32, 32);
+             ctx.strokeStyle='#000'; ctx.strokeRect(t.x,t.y,32,32);
+        } else if(t.type === 'flag') {
+             ctx.fillStyle = '#fff'; ctx.fillRect(t.x, t.y, 4, 120);
+        } else {
+            drawSprite(ctx, t.type, t.type==='brick'?'brick':(t.type==='qblock'?'qblock':'brick'), t.x, t.y);
+        }
+    });
+
+    // رسم الأعداء
+    enemies.forEach(e => {
+        if(!e.dead) drawSprite(ctx, 'goomba', 'goomba', e.x, e.y);
+    });
+
+    // رسم اللاعب (مع تبديل السبرايت للحركة)
+    if(gameState === 'PLAYING') {
+        let spriteKey = 'marioIdle';
+        if(!player.grounded) spriteKey = 'marioRun'; // وضعية القفز
+        else if(Math.abs(player.vx) > 0.5) {
+            // تبديل بين صورتين للمشي
+            spriteKey = (Math.floor(player.animTimer / 5) % 2 === 0) ? 'marioRun' : 'marioIdle';
+        }
+        drawSprite(ctx, spriteKey, 'mario', player.x, player.y, player.facing === -1);
+    }
+
+    ctx.restore();
+
+    // تحديث الواجهة
+    document.getElementById('score').innerText = score.toString().padStart(6, '0');
+    document.getElementById('coins').innerText = 'x' + coins.toString().padStart(2, '0');
     
-    // إظهار السؤال
-    generateQuestion();
-    quizScreen.classList.add('active');
+    requestAnimationFrame(update);
+    if(gameState === 'PLAYING') requestAnimationFrame(draw);
+}
+
+// === 5. نظام الأسئلة والإنقاذ ===
+const quizModal = document.getElementById('quiz-screen');
+let quizTimer;
+
+function die() {
+    gameState = 'QUIZ';
+    playSound('die');
     
-    // بدء المؤقت
-    quizTimerVal = 30;
-    document.getElementById('timer-fill').style.width = '100%';
-    clearInterval(quizInterval);
-    quizInterval = setInterval(() => {
-        quizTimerVal--;
-        document.getElementById('timer-fill').style.width = (quizTimerVal/30)*100 + '%';
-        if(quizTimerVal <= 0) {
-            clearInterval(quizInterval);
-            resetGame(); // انتهى الوقت، خسارة كاملة
+    // تجهيز السؤال
+    quizModal.classList.add('active');
+    generateMathProblem();
+    
+    // مؤقت
+    let timeLeft = 30;
+    const bar = document.getElementById('timer-fill');
+    bar.style.width = '100%';
+    
+    if(quizTimer) clearInterval(quizTimer);
+    quizTimer = setInterval(() => {
+        timeLeft--;
+        bar.style.width = (timeLeft/30)*100 + '%';
+        if(timeLeft <= 0) {
+            clearInterval(quizTimer);
+            fullReset(); // انتهى الوقت = خسارة كاملة
         }
     }, 1000);
 }
 
-function generateQuestion() {
-    // إعداد أرقام عربية (0-10)
+function generateMathProblem() {
+    const isSum = Math.random() > 0.4;
     const toArabic = n => (''+n).replace(/\d/g, d=>'٠١٢٣٤٥٦٧٨٩'[d]);
-    
-    const isPlus = Math.random() > 0.5;
-    const a = Math.floor(Math.random() * 11); // 0-10
-    const b = Math.floor(Math.random() * 11);
-    
+
+    let a = Math.floor(Math.random()*11);
+    let b = Math.floor(Math.random()*11);
     let ans, qStr;
-    if(isPlus) {
-        // تأكد المجموع ما يتجاوز 20 للتبسيط، أو خليه بسيط
+
+    if(isSum) {
         ans = a + b;
         qStr = `${toArabic(a)} + ${toArabic(b)}`;
     } else {
-        // الطرح: تأكد الأكبر أولاً
-        let max = Math.max(a, b);
-        let min = Math.min(a, b);
-        ans = max - min;
-        qStr = `${toArabic(max)} − ${toArabic(min)}`;
+        // ضمان الطرح موجب
+        if(a < b) [a, b] = [b, a];
+        ans = a - b;
+        qStr = `${toArabic(a)} − ${toArabic(b)}`;
     }
 
-    // العرض النصي
-    document.getElementById('q-text').textContent = `${qStr} = ؟`;
+    document.getElementById('question-text').innerText = `${qStr} = ؟`;
 
-    // العرض البصري (الدوائر)
-    const visual = document.getElementById('q-visual');
+    // التمثيل البصري (الميزة الجديدة)
+    const visual = document.getElementById('visual-area');
     visual.innerHTML = '';
     
-    const createDots = (count) => {
-        let div = document.createElement('div');
-        div.className = 'visual-group';
-        for(let i=0; i<count; i++) {
-            let d = document.createElement('div');
-            d.className = 'dot';
-            div.appendChild(d);
+    // نرسم العدد الأول (الكبير في الطرح)
+    const totalDots = isSum ? a : a; 
+    
+    // إنشاء الكرات
+    for(let i=0; i<totalDots; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        // إذا طرح، نشطب آخر كرات بعدد المطروح
+        if(!isSum && i >= (a - b)) {
+            dot.classList.add('crossed');
         }
-        return div;
-    };
-
-    if(isPlus) {
-        visual.appendChild(createDots(a));
-        let op = document.createElement('div'); op.className='operator'; op.textContent='+';
+        visual.appendChild(dot);
+    }
+    // في الجمع نضيف كرات العدد الثاني بفاصل
+    if(isSum) {
+        const op = document.createElement('div'); op.className='operator-sign'; op.innerText='+';
         visual.appendChild(op);
-        visual.appendChild(createDots(b));
-    } else {
-        // في الطرح نظهر الرقم الكبير فقط
-        let max = Math.max(a, b);
-        visual.appendChild(createDots(max));
+        for(let i=0; i<b; i++) {
+            const d = document.createElement('div'); d.className='dot'; visual.appendChild(d);
+        }
     }
 
     // الخيارات
-    const container = document.getElementById('answers-container');
-    container.innerHTML = '';
+    const ansGrid = document.getElementById('answers-grid');
+    ansGrid.innerHTML = '';
+    const opts = new Set([ans]);
+    while(opts.size < 4) opts.add(Math.max(0, ans + Math.floor(Math.random()*5)-2));
     
-    let options = new Set([ans]);
-    while(options.size < 4) {
-        let wrong = ans + Math.floor(Math.random()*5) - 2;
-        if(wrong >= 0) options.add(wrong);
-    }
-    
-    Array.from(options).sort(()=>Math.random()-0.5).forEach(opt => {
-        let btn = document.createElement('button');
+    Array.from(opts).sort(()=>Math.random()-0.5).forEach(o => {
+        const btn = document.createElement('button');
         btn.className = 'ans-btn';
-        btn.textContent = toArabic(opt);
-        btn.onclick = () => checkAnswer(opt, ans);
-        container.appendChild(btn);
+        btn.innerText = toArabic(o);
+        btn.onclick = () => {
+            if(o === ans) {
+                // إجابة صحيحة
+                clearInterval(quizTimer);
+                quizModal.classList.remove('active');
+                respawn();
+            } else {
+                // خطأ
+                btn.style.background = '#555';
+            }
+        };
+        ansGrid.appendChild(btn);
     });
 }
 
-function checkAnswer(selected, correct) {
-    if(selected === correct) {
-        // إجابة صحيحة: العودة لنقطة الأمان
-        clearInterval(quizInterval);
-        quizScreen.classList.remove('active');
-        respawnSafe();
-    } else {
-        // إجابة خاطئة: مؤثر اهتزاز أو صوت (اختياري)
-        // حالياً نعيد اللعبة بالكامل عقاباً
-        clearInterval(quizInterval);
-        resetGame();
-    }
-}
-
-function respawnSafe() {
-    // إرجاع اللاعب لآخر مكان آمن
-    player.dead = false;
+function respawn() {
+    gameState = 'PLAYING';
     player.x = safeSpot.x;
-    player.y = safeSpot.y - 20; // ارفعه شوي عشان ما يعلق
-    player.vx = 0; 
-    player.vy = 0;
-    gameRunning = true;
-    requestAnimationFrame(loop);
+    player.y = safeSpot.y;
+    player.vx = 0; player.vy = 0;
+    requestAnimationFrame(update);
+    requestAnimationFrame(draw);
 }
 
-function resetGame() {
-    quizScreen.classList.remove('active');
+function fullReset() {
+    quizModal.classList.remove('active');
     document.getElementById('start-screen').classList.add('active');
-    score = 0; coins = 0;
-    updateUI();
-    initLevel();
-    player = new Player();
-    cameraX = 0;
-    safeSpot = {x: 50, y: 0};
-    gameRunning = false;
+    gameState = 'MENU';
 }
 
-// ========================
-// 6. الصوت والتحكم
-// ========================
-// مولد أصوات بسيط
+function initGame() {
+    parseLevel();
+    player.x = 50; player.y = 100; player.vx=0; player.vy=0;
+    score = 0; coins = 0;
+    camera.x = 0;
+    document.getElementById('start-screen').classList.remove('active');
+    gameState = 'PLAYING';
+    update();
+    draw();
+    
+    // تشغيل الصوت (تفعيل الـ Context)
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// === صوت بسيط ===
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(type) {
-    if(audioCtx.state === 'suspended') audioCtx.resume();
+    if(gameState === 'MENU') return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain); gain.connect(audioCtx.destination);
-
+    
     const now = audioCtx.currentTime;
     if(type === 'jump') {
         osc.type = 'square';
         osc.frequency.setValueAtTime(150, now);
         osc.frequency.linearRampToValueAtTime(300, now + 0.1);
-        gain.gain.setValueAtTime(0.1, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
         osc.start(now); osc.stop(now + 0.1);
     } else if(type === 'coin') {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(900, now);
-        osc.frequency.setValueAtTime(1200, now + 0.05);
-        gain.gain.setValueAtTime(0.1, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.1);
+        osc.frequency.setValueAtTime(1000, now);
+        osc.frequency.setValueAtTime(1500, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
         osc.start(now); osc.stop(now + 0.1);
     } else if(type === 'stomp') {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(100, now);
-        gain.gain.setValueAtTime(0.1, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
         osc.start(now); osc.stop(now + 0.1);
     }
 }
 
-// التحكم بالكيبورد
+// المدخلات
 window.addEventListener('keydown', e => {
-    if(e.code === 'ArrowRight') keys.right = true;
-    if(e.code === 'ArrowLeft') keys.left = true;
-    if(e.code === 'Space' || e.code === 'ArrowUp') keys.up = true;
+    if(e.code==='ArrowRight') input.right=true;
+    if(e.code==='ArrowLeft') input.left=true;
+    if(e.code==='Space'||e.code==='ArrowUp') input.jump=true;
 });
 window.addEventListener('keyup', e => {
-    if(e.code === 'ArrowRight') keys.right = false;
-    if(e.code === 'ArrowLeft') keys.left = false;
-    if(e.code === 'Space' || e.code === 'ArrowUp') keys.up = false;
+    if(e.code==='ArrowRight') input.right=false;
+    if(e.code==='ArrowLeft') input.left=false;
+    if(e.code==='Space'||e.code==='ArrowUp') input.jump=false;
 });
-
-// التحكم باللمس
-const btnRight = document.getElementById('btn-right');
-const btnLeft = document.getElementById('btn-left');
-const btnJump = document.getElementById('btn-jump');
-
-const addTouch = (elem, code, val) => {
-    elem.addEventListener('touchstart', (e) => { e.preventDefault(); keys[code] = true; });
-    elem.addEventListener('touchend', (e) => { e.preventDefault(); keys[code] = false; });
-};
-addTouch(btnRight, 'right');
-addTouch(btnLeft, 'left');
-addTouch(btnJump, 'up');
-
-// زر البدء
-document.getElementById('start-screen').addEventListener('click', () => {
-    document.getElementById('start-screen').classList.remove('active');
-    initLevel();
-    player = new Player();
-    gameRunning = true;
-    loop();
-});
-
-function updateUI() {
-    document.getElementById('score').innerText = score.toString().padStart(4, '0');
-    document.getElementById('coins').innerText = 'x' + coins.toString().padStart(2, '0');
-}
+document.getElementById('start-screen').addEventListener('click', initGame);
 
 // تشغيل أولي
-initLevel();
+parseLevel();
+draw();
