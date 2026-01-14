@@ -1,58 +1,71 @@
-<!doctype html><html lang="ar" dir="rtl"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="theme-color" content="#071024"/><link rel="manifest" href="manifest.json"/><link rel="icon" href="assets/icons/app-192.png"/>
-<title>طريق المغامرة</title><link rel="stylesheet" href="styles.css"/></head><body>
-<div class="wrap">
-  <div class="header"><div class="brand"><img src="assets/icons/app-192.png" alt="طريق المغامرة"/><h1>طريق المغامرة</h1></div></div>
-  <div class="main">
-    <div>
-      <div class="panel canvasWrap">
-        <canvas id="game" width="960" height="540"></canvas>
-        <div class="overlay" id="quizOverlay" aria-live="polite">
-          <div class="modal">
-            <div class="modalHeader"><span class="pill" id="quizType">سؤال</span><span class="timer" id="quizTimer">٢٠</span></div>
-            <div class="qText" id="quizText">...</div>
-              <div class="viz" id="quizViz" aria-hidden="false"></div><div class="choices" id="quizChoices"></div>
-            <div class="hint">اختر الإجابة الصحيحة خلال ٢٠ ثانية لتكمل اللعب ✅</div>
-          </div>
-        </div>
-      </div>
-      
-        <div class="overlay" id="nameOverlay" aria-live="polite">
-          <div class="modal">
-            <div class="modalHeader">
-              <span class="pill">الاسم</span>
-              <span class="timer">طريق المغامرة</span>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>بطل المعرفة - المغامرة التعليمية</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="hud">
+            <div class="hud-item">
+                <span class="label">المرحلة</span>
+                <span class="value" id="uiLevel">1</span>
             </div>
-            <div class="qText">اكتب اسم اللاعب</div>
-            <div style="display:grid;gap:10px">
-              <input id="nameInput" class="nameInput" type="text" maxlength="18" placeholder="اسم اللاعب"/>
-              <button class="btn primary" id="btnSaveName" type="button">حفظ</button>
+            <div class="hud-item">
+                <span class="label">النقاط</span>
+                <span class="value" id="uiScore">0</span>
             </div>
-            <div class="hint">يمكنك تغيير الاسم لاحقًا من لوحة التحكم ✅</div>
-          </div>
+            <div class="hud-item user-badge">
+                <span class="avatar">👤</span>
+                <span class="value" id="uiPlayer">اللاعب</span>
+            </div>
         </div>
 
-<div class="mobileControls"><button class="jumpBtn" id="btnJump">قفز</button><div class="joy" id="joy"><div class="knob" id="knob"></div></div></div>
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="mobile-controls">
+            <div class="d-pad">
+                <button id="btnLeft">⬅️</button>
+                <button id="btnRight">➡️</button>
+            </div>
+            <button id="btnJump" class="action-btn">قفز 🦘</button>
+        </div>
+
+        <div id="startScreen" class="overlay active">
+            <div class="modal">
+                <h1>🎮 بطل المعرفة</h1>
+                <p>اجمع العملات، تجنب الوحوش، وحل المسائل!</p>
+                
+                <div class="input-group">
+                    <input type="text" id="nameInput" placeholder="اكتب اسمك هنا يا بطل" maxlength="15">
+                </div>
+                
+                <button id="btnStartGame" class="btn-primary">انطلق للمغامرة!</button>
+                
+                <div class="footer-note">
+                    برمجة: <b>سلمان الجنيدي</b>
+                </div>
+            </div>
+        </div>
+
+        <div id="quizScreen" class="overlay">
+            <div class="modal quiz-modal">
+                <div class="quiz-header">
+                    <span class="timer" id="quizTimer">20</span>
+                    <h2>فرصة للعودة! 🧠</h2>
+                </div>
+                <div class="question-box">
+                    <p id="quizQuestion">5 + 3 = ؟</p>
+                </div>
+                <div class="options-grid" id="quizOptions">
+                    </div>
+            </div>
+        </div>
     </div>
-    <div class="side"><div class="panel">
-      <h2>لوحة التحكم</h2>
-      <div class="kv"><span>المرحلة</span><b id="uiLevel">١</b></div>
-      <div class="kv"><span>النتيجة</span><b id="uiScore">٠</b></div>
-          <div class="kv"><span>اللاعب</span><b id="uiPlayer">—</b></div>
-          <button class="btn" id="btnChangeName" style="margin-top:10px;width:100%">تغيير الاسم</button>
-      <div class="kv"><span>إجابات صحيحة</span><b id="uiCorrect">٠</b></div>
-      <div class="kv"><span>إجابات خاطئة</span><b id="uiWrong">٠</b></div>
-      <div class="controls"><button class="btn primary" id="btnStart">ابدأ</button><button class="btn" id="btnRestart">إعادة</button></div>
-      <p class="small" style="margin:12px 0 0;color:var(--muted);line-height:1.7">التحكّم: <b>⟵ ⟶</b> للحركة، <b>مسافة</b> للقفز. على الجوال: عصا يمين + زر قفز يسار.</p>
-    </div></div>
-  </div>
-  <div class="footer"><div>© جميع الحقوق محفوظة لـ <b>سلمان الجنيدي</b></div>
-    <div class="links">
-      <a class="iconBtn" href="https://snapchat.com/t/dE9xDbXy" target="_blank" rel="noopener"><img src="assets/icons/snap.svg" alt="Snapchat"/> سناب</a>
-      <a class="iconBtn" href="https://wa.me/966566996166" target="_blank" rel="noopener"><img src="assets/icons/whatsapp.svg" alt="WhatsApp"/> واتساب</a>
-    </div>
-  </div>
-</div>
-<script type="module" src="js/main.js"></script>
-</body></html>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
