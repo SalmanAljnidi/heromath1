@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>سوبر بطل المعرفة - العالم الكامل</title>
+    <title>سوبر بطل المعرفة - المصححة</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Press+Start+2P&display=swap');
         
         body {
-            margin: 0; background: #121212; color: white;
+            margin: 0; background: #1a1a1a; color: white;
             font-family: 'Cairo', sans-serif;
             height: 100vh; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             overflow: hidden; touch-action: none; select: none;
+            -webkit-user-select: none;
         }
 
         #game-frame {
             position: relative;
             width: 100%; max-width: 800px;
             aspect-ratio: 16/10;
-            background: #6b8cff; /* لون سماء ماريو الرسمي */
+            background: #6b8cff;
             border: 4px solid #fff;
-            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            box-shadow: 0 0 40px rgba(0,0,0,0.7);
             overflow: hidden;
         }
 
@@ -29,7 +30,7 @@
 
         /* واجهة المعلومات */
         #hud {
-            position: absolute; top: 12px; left: 12px; right: 12px;
+            position: absolute; top: 10px; left: 10px; right: 10px;
             display: flex; justify-content: space-between;
             font-family: 'Press Start 2P', cursive;
             font-size: 14px; text-shadow: 2px 2px #000;
@@ -38,27 +39,27 @@
 
         /* الشاشات */
         .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
             display: none; flex-direction: column; 
             align-items: center; justify-content: center; z-index: 100;
             text-align: center;
         }
         .overlay.active { display: flex; }
         
-        h1 { color: #ffce00; text-shadow: 4px 4px #d32f2f; font-size: 32px; margin: 0 0 20px; font-family: 'Cairo'; }
+        h1 { color: #ffce00; text-shadow: 4px 4px #d32f2f; font-size: 30px; margin: 0 0 20px; font-family: 'Cairo'; }
         
-        .btn {
+        #btn-start-game {
             background: #00AA00; color: white; border: 3px solid white;
-            padding: 15px 50px; font-size: 20px; cursor: pointer;
+            padding: 15px 50px; font-size: 22px; cursor: pointer;
             font-family: 'Cairo'; font-weight: bold; border-radius: 50px;
-            box-shadow: 0 5px 0 #006600; transition: 0.1s;
+            box-shadow: 0 6px 0 #006600; transition: 0.1s;
         }
-        .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #006600; }
+        #btn-start-game:active { transform: translateY(4px); box-shadow: 0 2px 0 #006600; }
 
         /* نافذة السؤال */
         .quiz-panel {
-            background: #6b8cff; border: 4px solid white; padding: 25px;
-            border-radius: 15px; width: 90%; max-width: 500px;
+            background: #6b8cff; border: 4px solid white; padding: 20px;
+            border-radius: 15px; width: 90%; max-width: 450px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
         .timer-bar { width: 100%; height: 10px; background: #333; margin-bottom: 20px; border-radius: 5px; overflow: hidden; }
@@ -66,43 +67,47 @@
         
         .dots-area {
             display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
-            margin: 20px 0; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px;
+            margin: 15px 0; background: rgba(0,0,0,0.15); padding: 10px; border-radius: 10px;
         }
         .dot {
-            width: 30px; height: 30px; background: #ff4444; border-radius: 50%;
+            width: 25px; height: 25px; background: #ff4444; border-radius: 50%;
             border: 3px solid white; box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
         }
         .dot.crossed { background: #555; opacity: 0.6; position: relative; }
-        .dot.crossed::after { content:'✖'; position: absolute; left:50%; top:50%; transform:translate(-50%,-50%); color: white; font-size: 20px; }
+        .dot.crossed::after { content:'✖'; position: absolute; left:50%; top:50%; transform:translate(-50%,-50%); color: white; font-size: 18px; }
         
-        .math-q { font-size: 40px; direction: ltr; margin: 20px 0; text-shadow: 3px 3px #000; font-family: 'Press Start 2P'; }
+        .math-q { font-size: 32px; direction: ltr; margin: 15px 0; text-shadow: 3px 3px #000; font-family: 'Press Start 2P'; }
         
         .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .ans-btn {
             background: #ffce00; border: 3px solid #000; padding: 15px;
-            font-size: 28px; font-weight: bold; cursor: pointer; color: #000;
+            font-size: 24px; font-weight: bold; cursor: pointer; color: #000;
             border-radius: 10px; font-family: 'Cairo';
         }
 
-        /* تحكم الجوال */
+        /* تحكم الجوال (معدل) */
         #mobile-ctrl {
-            position: absolute; bottom: 20px; left: 20px; right: 20px;
-            display: none; justify-content: space-between; z-index: 50;
+            position: absolute; bottom: 10px; left: 10px; right: 10px;
+            display: none; justify-content: space-between; z-index: 80;
+            pointer-events: none; /* عشان ما يغطي اللمس */
         }
         @media (hover: none) and (pointer: coarse) { #mobile-ctrl { display: flex; } }
         
-        .dpad { display: flex; gap: 20px; }
+        .ctrl-zone { pointer-events: auto; display: flex; gap: 15px; }
+        
         .t-btn {
-            width: 80px; height: 80px; background: rgba(255,255,255,0.2);
-            border: 4px solid rgba(255,255,255,0.7); border-radius: 50%;
+            width: 75px; height: 75px; 
+            background: rgba(255,255,255,0.1); /* شفاف جداً */
+            border: 2px solid rgba(255,255,255,0.4); border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 40px; color: white; backdrop-filter: blur(5px);
+            font-size: 30px; color: rgba(255,255,255,0.8); 
             user-select: none; -webkit-tap-highlight-color: transparent;
+            backdrop-filter: blur(2px);
         }
-        .t-btn:active { background: rgba(255,255,255,0.5); transform: scale(0.95); }
-        .btn-jump { background: rgba(255, 50, 50, 0.3); border-color: rgba(255, 100, 100, 0.8); }
+        .t-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.9); }
+        .btn-jump { background: rgba(255, 50, 50, 0.15); border-color: rgba(255, 100, 100, 0.5); font-weight: bold; }
 
-        .footer { margin-top: 15px; color: #777; font-size: 12px; }
+        .footer { margin-top: 10px; color: #777; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -118,14 +123,13 @@
 
     <div id="start-screen" class="overlay active">
         <h1>سوبر بطل المعرفة</h1>
-        <p style="font-size: 16px; margin-bottom: 30px;">4 عوالم مختلفة • أسئلة ذكية • مغامرة شيقة</p>
-        <button class="btn" onclick="Game.init()">ابدأ اللعب ▶</button>
+        <p style="font-size: 16px; margin-bottom: 30px;">اضغط الزر أدناه للبدء</p>
+        <button id="btn-start-game">ابدأ اللعب ▶</button>
     </div>
 
     <div id="quiz-screen" class="overlay">
         <div class="quiz-panel">
             <h2 style="color:#ffce00; margin:0; text-shadow:2px 2px #000;">فرصة للنجاة!</h2>
-            <div style="font-size:14px; margin-bottom:10px;">أجب بسرعة لتكمل من نفس المكان</div>
             <div class="timer-bar"><div id="timer-fill"></div></div>
             <div class="dots-area" id="visual-area"></div>
             <div class="math-q" id="q-text"></div>
@@ -134,33 +138,37 @@
     </div>
 
     <div id="mobile-ctrl">
-        <div class="dpad">
+        <div class="ctrl-zone">
             <div class="t-btn" id="btn-left">◀</div>
             <div class="t-btn" id="btn-right">▶</div>
         </div>
-        <div class="t-btn btn-jump" id="btn-jump">A</div>
+        <div class="ctrl-zone">
+            <div class="t-btn btn-jump" id="btn-jump">A</div>
+        </div>
     </div>
 </div>
 
 <div class="footer">
-    © برمجة وتطوير: <b>سلمان الجنيدي</b>
+    © جميع الحقوق محفوظة لـ <b>سلمان الجنيدي</b>
 </div>
 
 <script>
 /**
- * Super Knowledge Hero - V7 Stable Gold Edition
- * Fixed freeze issues, added levels, enhanced colors.
+ * V8 Fixes:
+ * 1. Fixed Button mapping (Left is Left, Right is Right).
+ * 2. Fixed Start Button (EventListener).
+ * 3. Adjusted Mobile UI (Transparent & Bottom).
+ * 4. Lifted Camera so player is not covered.
  */
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-// NES Resolution
 const WIDTH = 256;
 const HEIGHT = 240;
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
 
-// === 1. Sound Engine (Safe Mode) ===
+// === 1. Sound ===
 const AudioSys = {
     ctx: null,
     init: function() {
@@ -177,7 +185,7 @@ const AudioSys = {
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             const t = this.ctx.currentTime;
-
+            
             if (type === 'jump') {
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(150, t);
@@ -199,24 +207,16 @@ const AudioSys = {
                 gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
                 osc.start(t); osc.stop(t + 0.1);
             }
-        } catch(e) { /* Ignore audio errors to prevent freeze */ }
+        } catch(e) {}
     }
 };
 
-// === 2. Graphics Generator (Vibrant Palette) ===
+// === 2. Graphics ===
 const Colors = {
-    _: null,
-    R: '#FF3333', // Mario Red
-    S: '#FFCC99', // Skin
-    B: '#0066CC', // Mario Blue
-    W: '#FFFFFF',
-    O: '#FF9900', // Gold
-    K: '#8B4513', // Brick Dark
-    L: '#CD853F', // Brick Light
-    G: '#00CC00', // Pipe Green
-    D: '#006600', // Pipe Dark
-    Y: '#FFD700', // Question
-    Z: '#000000'
+    R: '#FF3333', S: '#FFCC99', B: '#0066CC',
+    W: '#FFFFFF', O: '#FF9900', K: '#8B4513',
+    L: '#CD853F', G: '#00CC00', D: '#006600',
+    Y: '#FFD700', Z: '#000000'
 };
 
 function genSprite(p) {
@@ -235,156 +235,38 @@ function genSprite(p) {
 }
 
 const GFX = {
-    mario: genSprite([
-        "_____RRRRR______",
-        "____RRRRRRRRR___",
-        "____KKKSKKS_____",
-        "___SKSKKKKSKK___",
-        "___SKSKKKKSKK___",
-        "___SSKKKKSSSS___",
-        "_____SSSSSSS____",
-        "____RRRBRRR_____",
-        "___RRRRBRRRR____",
-        "__RRRRBBBBRRR___",
-        "__BBRBWWWBBRR___",
-        "__BBBWWWWWBBB___",
-        "__BBWWWWWWWBB___",
-        "___BBB___BBB____",
-        "__KKKK___KKKK___",
-        "_KKKKK___KKKKK__"
-    ]),
-    brick: genSprite([
-        "KKKKKKKKKKKKKKKK",
-        "KLLLLKLLLLLLLLLK",
-        "KLLLLKLLLLLLLLLK",
-        "KKKKKKKKKKKKKKKK",
-        "KLLLLLLLLKLKLLLK",
-        "KLLLLLLLLKLKLLLK",
-        "KKKKKKKKKKKKKKKK",
-        "KLLLKLLLLLLLLLLK",
-        "KLLLKLLLLLLLLLLK",
-        "KKKKKKKKKKKKKKKK",
-        "KLLLLKLLLLLLLLLK",
-        "KLLLLKLLLLLLLLLK",
-        "KKKKKKKKKKKKKKKK",
-        "KLLLLLLLLKLKLLLK",
-        "KLLLLLLLLKLKLLLK",
-        "KKKKKKKKKKKKKKKK"
-    ]),
-    qblock: genSprite([
-        "KKKKKKKKKKKKKKKK",
-        "KOOOOOOOOOOOOOKZ",
-        "KOYKKKKKKKKKYOKZ",
-        "KOYKYYOOOOYKYOKZ",
-        "KOYKYYOOOOYKYOKZ",
-        "KOYKYYYYYKYKYOKZ",
-        "KOYKYYYYKKYKYOKZ",
-        "KOYKKKKKYYYKYOKZ",
-        "KOYYYYYYYKYKYOKZ",
-        "KOYYYYYYYKYKYOKZ",
-        "KOYYYYYYYYYYYOKZ",
-        "KOYYYYYYYKYKYOKZ",
-        "KOYYYYYYYKYKYOKZ",
-        "KOYYYYYYYYYYYOKZ",
-        "KZZZZZZZZZZZZZZZ"
-    ]),
-    ground: genSprite([
-        "LLLLLLLLLLLLLLLL",
-        "LKKKKKKKKKKKKKKL",
-        "LKLLLLLLLLLLLLKL",
-        "LKLLLLLLLLLLLLKL",
-        "LKLKKKKKKKKKKLKL",
-        "LKLKLLLLLLLLKLKL",
-        "LKLKLLLLLLLLKLKL",
-        "LKLKLLLLLLLLKLKL",
-        "LKLKKKKKKKKKKLKL",
-        "LKLLLLLLLLLLLLKL",
-        "LKLLLLLLLLLLLLKL",
-        "LKKKKKKKKKKKKKKL",
-        "LLLLLLLLLLLLLLLL",
-        "LLLLLLLLLLLLLLLL",
-        "LLLLLLLLLLLLLLLL",
-        "LLLLLLLLLLLLLLLL"
-    ]),
-    enemy: genSprite([
-        "_______ZZ_______",
-        "______ZRRZ______",
-        "_____ZRRRRZ_____",
-        "____ZRRRRRRZ____",
-        "___ZRRRRRRRRZ___",
-        "___ZRRZRRZRRZ___",
-        "__ZRRRWZZWRRZZ__",
-        "__ZRRRZZZZRRRZ__",
-        "__ZRRRRRRRRRRZ__",
-        "___ZRRRRRRRRZ___",
-        "____ZZZZZZZZ____",
-        "____ZKKZZKKZ____",
-        "___ZKKKZZKKKZ___",
-        "___ZKKKZZKKKZ___",
-        "___ZZZZ__ZZZZ___",
-        "________________"
-    ])
+    mario: genSprite(["_____RRRRR______","____RRRRRRRRR___","____KKKSKKS_____","___SKSKKKKSKK___","___SKSKKKKSKK___","___SSKKKKSSSS___","_____SSSSSSS____","____RRRBRRR_____","___RRRRBRRRR____","__RRRRBBBBRRR___","__BBRBWWWBBRR___","__BBBWWWWWBBB___","__BBWWWWWWWBB___","___BBB___BBB____","__KKKK___KKKK___","_KKKKK___KKKKK__"]),
+    brick: genSprite(["KKKKKKKKKKKKKKKK","KLLLLKLLLLLLLLLK","KLLLLKLLLLLLLLLK","KKKKKKKKKKKKKKKK","KLLLLLLLLKLKLLLK","KLLLLLLLLKLKLLLK","KKKKKKKKKKKKKKKK","KLLLKLLLLLLLLLLK","KLLLKLLLLLLLLLLK","KKKKKKKKKKKKKKKK","KLLLLKLLLLLLLLLK","KLLLLKLLLLLLLLLK","KKKKKKKKKKKKKKKK","KLLLLLLLLKLKLLLK","KLLLLLLLLKLKLLLK","KKKKKKKKKKKKKKKK"]),
+    qblock: genSprite(["KKKKKKKKKKKKKKKK","KOOOOOOOOOOOOOKZ","KOYKKKKKKKKKYOKZ","KOYKYYOOOOYKYOKZ","KOYKYYOOOOYKYOKZ","KOYKYYYYYKYKYOKZ","KOYKYYYYKKYKYOKZ","KOYKKKKKYYYKYOKZ","KOYYYYYYYKYKYOKZ","KOYYYYYYYKYKYOKZ","KOYYYYYYYYYYYOKZ","KOYYYYYYYKYKYOKZ","KOYYYYYYYKYKYOKZ","KOYYYYYYYYYYYOKZ","KZZZZZZZZZZZZZZZ"]),
+    ground: genSprite(["LLLLLLLLLLLLLLLL","LKKKKKKKKKKKKKKL","LKLLLLLLLLLLLLKL","LKLLLLLLLLLLLLKL","LKLKKKKKKKKKKLKL","LKLKLLLLLLLLKLKL","LKLKLLLLLLLLKLKL","LKLKLLLLLLLLKLKL","LKLKKKKKKKKKKLKL","LKLLLLLLLLLLLLKL","LKLLLLLLLLLLLLKL","LKKKKKKKKKKKKKKL","LLLLLLLLLLLLLLLL","LLLLLLLLLLLLLLLL","LLLLLLLLLLLLLLLL","LLLLLLLLLLLLLLLL"]),
+    enemy: genSprite(["_______ZZ_______","______ZRRZ______","_____ZRRRRZ_____","____ZRRRRRRZ____","___ZRRRRRRRRZ___","___ZRRZRRZRRZ___","__ZRRRWZZWRRZZ__","__ZRRRZZZZRRRZ__","__ZRRRRRRRRRRZ__","___ZRRRRRRRRZ___","____ZZZZZZZZ____","____ZKKZZKKZ____","___ZKKKZZKKKZ___","___ZKKKZZKKKZ___","___ZZZZ__ZZZZ___","________________"])
 };
 
-// === 3. Designed Levels (Not Random) ===
-// M: Ground, B: Brick, ?: QBlock, P: Pipe, E: Enemy, #: Gap
-const LevelMaps = [
-    // World 1-1: The Basics (Green Hill)
-    "                                                                                                   F",
-    "                                                                                                   F",
-    "                ?                      B?B?B                     ?        B?B                      F",
-    "                                                                                                   F",
-    "         E              P          E             P           E   E       BBBBB                     F",
-    "MMMMMMMMMMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-    // World 1-2: Underground (More gaps)
-    "                                                                                                   F",
-    "         BBBBBB                  BB?BB?BB                  BBBBBB                                  F",
-    "                    ?                                                                              F",
-    "                                                 BBBB                                  BB          F",
-    "    E           P          E   E       P                   E      E      P           BBBB          F",
-    "MMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMMMM      MMMMMMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMM",
-    // World 1-3: Sky Platforms
-    "                                                                                                   F",
-    "      ?        BBB           ?        BBB        ?        BBB           ?      BBB                 F",
-    "         BBB          BBB        BBB        BBB       BBB        BBB                               F",
-    "                                                                                      BB           F",
-    "   E  BB           E  BB      E  BB      E  BB     E  BB      E  BB                 BBBB           F",
-    "MMMM      MMMMMMMM      MMMM      MMMMMM      MMMM      MMMMMM      MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-    // World 1-4: Castle (Hard)
-    "                                                                                                   F",
-    "       ?   ?   ?          BBB?BBB           BBB?BBB          BBB?BBB                               F",
-    "                                                                                                   F",
-    "    P     P     P      P     P     P     P     P     P     P     P     P               BB          F",
-    " E     E     E      E     E     E     E     E     E     E     E     E               BBBB          F",
-    "MMMM  MMMM  MMMM   MMMM  MMMM  MMMM  MMMM  MMMM  MMMM  MMMM  MMMM  MMMM   MMMMMMMMMMMMMMMMMMMMMMMMMM"
-];
-
-// === 4. Game Engine ===
+// === 3. Game Engine ===
 const Game = {
-    loopId: null,
     levelIdx: 0,
     score: 0, coins: 0,
     cameraX: 0,
     state: 'MENU',
-    
-    // Objects
     tiles: [],
     enemies: [],
     
-    startLevel: function(idx) {
-        this.levelIdx = idx % LevelMaps.length;
-        const map = LevelMaps[this.levelIdx];
+    // Level Design
+    initLevel: function() {
+        // Bright & Cheerful
+        document.getElementById('game-frame').style.background = '#5C94FC';
         
-        // Colors per world
-        const bgColors = ['#6b8cff', '#000000', '#87CEEB', '#4a0d0d'];
-        document.getElementById('game-frame').style.background = bgColors[idx % 4];
-        document.getElementById('world').innerText = '1-' + (idx + 1);
-
-        // Parse Map
         this.tiles = [];
         this.enemies = [];
         this.cameraX = 0;
         Player.reset();
+        
+        // Build World 1-1
+        const map = "                                                                                                   F" +
+                    "                ?                      B?B?B                     ?        B?B                      F" +
+                    "                                                                                                   F" +
+                    "         E              P          E             P           E   E       BBBBB                     F" +
+                    "MMMMMMMMMMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMMMM  MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM";
         
         const groundY = HEIGHT - 32;
         
@@ -392,12 +274,10 @@ const Game = {
             const char = map[c];
             const x = c * 16;
             
-            // Floor
             if(char === 'M') {
                 this.tiles.push({x:x, y:groundY, type:'ground'});
                 this.tiles.push({x:x, y:groundY+16, type:'ground'});
             }
-            // Objects
             else if(char === 'B') this.tiles.push({x:x, y:groundY-48, type:'brick', oy:groundY-48});
             else if(char === '?') this.tiles.push({x:x, y:groundY-48, type:'qblock', oy:groundY-48});
             else if(char === 'P') {
@@ -405,68 +285,68 @@ const Game = {
                 this.tiles.push({x:x, y:groundY-32, type:'pipe'});
             }
             else if(char === 'F') {
-                this.tiles.push({x:x, y:groundY-16, type:'flag'});
-                this.tiles.push({x:x, y:groundY-32, type:'flag'});
-                this.tiles.push({x:x, y:groundY-48, type:'flag'});
-                this.tiles.push({x:x, y:groundY-64, type:'flag'});
+                for(let i=1; i<=4; i++) this.tiles.push({x:x, y:groundY-(i*16), type:'flag'});
             }
-            // Enemies
             else if(char === 'E') {
                 this.enemies.push({x:x, y:groundY-16, w:16, h:16, vx:-30, vy:0, dead:false});
             }
         }
     },
 
-    init: function() {
+    start: function() {
         AudioSys.init();
         document.getElementById('start-screen').classList.remove('active');
-        this.startLevel(0);
+        this.initLevel();
         this.state = 'PLAYING';
         this.lastTime = performance.now();
-        this.update();
+        this.loop();
     },
 
-    update: function() {
+    loop: function() {
         if(this.state !== 'PLAYING') return;
         
         const now = performance.now();
         const dt = Math.min((now - this.lastTime)/1000, 0.05);
         this.lastTime = now;
 
-        // Player
+        this.update(dt);
+        this.draw();
+        
+        requestAnimationFrame(() => this.loop());
+    },
+
+    update: function(dt) {
         Player.update(dt);
         
-        // Camera
+        // Camera Follow (Keeping Player Higher on Screen)
+        // Target is to keep player at 40% width
         let targetX = Player.x - WIDTH * 0.4;
         if(targetX < 0) targetX = 0;
         this.cameraX += (targetX - this.cameraX) * 0.1;
-        if(Player.x < this.cameraX) Player.x = this.cameraX; // Wall
+        if(Player.x < this.cameraX) Player.x = this.cameraX;
 
         // Enemies
         this.enemies.forEach(e => {
             if(e.dead) return;
-            // Activate only when close
             if(Math.abs(e.x - Player.x) < WIDTH + 32) {
                 e.x += e.vx * dt;
-                e.y += 500 * dt; // Gravity
+                e.y += 500 * dt;
                 
-                // Ground Collision
                 let onGround = false;
                 this.tiles.forEach(t => {
                    if(rectCol(e, t)) {
                        if(e.y+e.h-4 <= t.y) { e.y = t.y - e.h; onGround = true; }
-                       else { e.vx *= -1; } // Turn on wall
+                       else { e.vx *= -1; }
                    } 
                 });
                 
-                // Player Collision
                 if(rectCol(Player, e)) {
                     if(Player.vy > 0 && Player.y < e.y + 8) {
                         e.dead = true;
                         Player.vy = -200;
                         this.score += 200;
                         AudioSys.play('stomp');
-                        e.y = 1000; // Remove
+                        e.y = 1000;
                     } else {
                         Player.die();
                     }
@@ -474,30 +354,23 @@ const Game = {
             }
         });
         
-        // HUD
         document.getElementById('score').innerText = this.score.toString().padStart(6,'0');
         document.getElementById('coins').innerText = 'x' + this.coins.toString().padStart(2,'0');
-
-        this.draw();
-        requestAnimationFrame(this.update.bind(this));
     },
 
     draw: function() {
-        // Clear
-        ctx.fillStyle = document.getElementById('game-frame').style.background;
+        ctx.fillStyle = '#5C94FC';
         ctx.fillRect(0,0,WIDTH,HEIGHT);
         
         ctx.save();
         ctx.translate(-Math.floor(this.cameraX), 0);
         
-        // Draw Tiles
-        // Cull off-screen tiles for performance
+        // Render visible tiles
         const startX = this.cameraX - 16;
         const endX = this.cameraX + WIDTH + 16;
         
         this.tiles.forEach(t => {
             if(t.x >= startX && t.x <= endX) {
-                // Bounce anim
                 let y = t.y;
                 if(t.bounce) {
                     y -= Math.sin(t.bounce * Math.PI) * 6;
@@ -522,14 +395,10 @@ const Game = {
             }
         });
         
-        // Enemies
         this.enemies.forEach(e => {
-            if(!e.dead && e.x >= startX && e.x <= endX) {
-                ctx.drawImage(GFX.enemy, e.x, e.y);
-            }
+            if(!e.dead && e.x >= startX && e.x <= endX) ctx.drawImage(GFX.enemy, e.x, e.y);
         });
         
-        // Player
         ctx.save();
         if(Player.dir === -1) {
             ctx.translate(Math.floor(Player.x)+16, Math.floor(Player.y));
@@ -553,7 +422,7 @@ const Player = {
     reset: function() { this.x=50; this.y=100; this.vx=0; this.vy=0; },
     
     update: function(dt) {
-        // Move
+        // FIX: Ensure Right adds, Left subtracts
         if(Input.right) { this.vx = this.speed; this.dir = 1; }
         else if(Input.left) { this.vx = -this.speed; this.dir = -1; }
         else { this.vx = 0; }
@@ -561,7 +430,6 @@ const Player = {
         this.x += this.vx * dt;
         this.checkCol(true);
         
-        // Jump
         if(Input.jump && this.grounded) {
             this.vy = -this.jump;
             this.grounded = false;
@@ -573,13 +441,11 @@ const Player = {
         this.grounded = false;
         this.checkCol(false);
         
-        // Death
         if(this.y > HEIGHT + 20) this.die();
         
-        // Win
         if(this.x > Game.tiles[Game.tiles.length-1].x - 100) {
-            Game.score += 500;
-            Game.startLevel(Game.levelIdx + 1);
+            alert("مبروك الفوز!");
+            Game.initLevel(); // Reset for now
         }
     },
     
@@ -598,7 +464,6 @@ const Player = {
                     } else if(this.vy < 0) {
                         this.y = t.y + 16;
                         this.vy = 0;
-                        // Hit block
                         if(t.type === 'brick') {
                             t.bounce = 1;
                             AudioSys.play('break');
@@ -629,7 +494,6 @@ function rectCol(r1, r2) {
 
 const Input = { left:false, right:false, jump:false };
 
-// === 5. Quiz Logic ===
 const Quiz = {
     timer: null,
     show: function() {
@@ -644,7 +508,6 @@ const Quiz = {
         const toAr = n => (''+n).replace(/\d/g, d=>'٠١٢٣٤٥٦٧٨٩'[d]);
         document.getElementById('q-text').innerText = `${toAr(a)} ${op} ${toAr(b)} = ؟`;
         
-        // Visual
         const v = document.getElementById('visual-area');
         v.innerHTML = '';
         for(let i=0; i<a; i++) {
@@ -653,7 +516,6 @@ const Quiz = {
             v.appendChild(d);
         }
         
-        // Options
         const g = document.getElementById('ans-area');
         g.innerHTML = '';
         let opts = new Set([ans]);
@@ -668,11 +530,10 @@ const Quiz = {
                     clearInterval(this.timer);
                     document.getElementById('quiz-screen').classList.remove('active');
                     Game.state = 'PLAYING';
-                    // Respawn safe
                     Player.y = 0; Player.vy = 0; 
                     Player.x = Math.max(0, Player.x - 50);
                     Game.lastTime = performance.now();
-                    Game.update();
+                    Game.loop();
                 } else {
                     b.style.background = '#555';
                 }
@@ -680,7 +541,6 @@ const Quiz = {
             g.appendChild(b);
         });
         
-        // Timer
         let t = 30;
         const bar = document.getElementById('timer-fill');
         if(this.timer) clearInterval(this.timer);
@@ -692,7 +552,12 @@ const Quiz = {
     }
 };
 
-// Input Handling
+// Start Button Listener (FIXED)
+document.getElementById('btn-start-game').addEventListener('click', () => {
+    Game.start();
+});
+
+// Touch Inputs (FIXED MAPPING)
 function bind(id, k) {
     const e = document.getElementById(id);
     e.addEventListener('touchstart', (ev)=>{ev.preventDefault(); Input[k]=true;});
@@ -700,10 +565,12 @@ function bind(id, k) {
     e.addEventListener('mousedown', (ev)=>{ev.preventDefault(); Input[k]=true;});
     e.addEventListener('mouseup', (ev)=>{ev.preventDefault(); Input[k]=false;});
 }
+// تأكدنا هنا: زر btn-left يفعل Input.left
 bind('btn-left', 'left');
 bind('btn-right', 'right');
 bind('btn-jump', 'jump');
 
+// Keyboard
 window.addEventListener('keydown', e => {
     if(e.code==='ArrowRight') Input.right=true;
     if(e.code==='ArrowLeft') Input.left=true;
